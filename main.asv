@@ -1,0 +1,17 @@
+classdef Main
+    methods(Static)
+        function run()
+            % Clear workspace, close figures, and clear command window
+            clear;
+            close all;
+            clc;
+
+            % Create an instance of the Dobot robot
+            robot = Dobot();
+
+            % Additional calls or functionality can be added here
+        end
+    end
+end
+
+
