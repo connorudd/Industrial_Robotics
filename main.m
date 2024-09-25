@@ -3,9 +3,8 @@ classdef main
         function run()
             % Create an instance of the Dobot robot
             robot = Dobot();
-
         end
-        function createRobotOnRail()
+        function createRobot()
             % Define the lengths of the robot links
             linkLengths = [0, 0.5, 0.5, 0.5, 0.5, 0.5]; % Adjust lengths as needed
             
@@ -19,14 +18,6 @@ classdef main
             % Update the robot position on the rail
             robot.updateJointAngles([0, pi/2, -pi/4, 0, 0, 0]); % Initial joint angles
             
-            % % Set the view
-            % view(3);
-            % grid on;
-            % axis equal;
-            % title('6DOF Robot on Linear Rail');
-            % xlabel('X-axis');
-            % ylabel('Y-axis');
-            % zlabel('Z-axis');
         end
 
     end
