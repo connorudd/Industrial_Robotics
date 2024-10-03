@@ -4,7 +4,7 @@
 
 % Display the mesh
 figure;
-patch('Vertices', v, 'Faces', f, 'FaceColor', 'red', 'EdgeColor', 'none');
+patch('Vertices', v, 'Faces', f, 'FaceColor', 'cyan', 'EdgeColor', 'none');
 axis equal;
 title('Mesh from PLY File');
 xlabel('X');
