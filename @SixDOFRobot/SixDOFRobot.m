@@ -15,7 +15,7 @@ classdef SixDOFRobot
         end
         
         function robotModel = createRobotModel(obj)
-            
+            % Define the links using DH parameters
             L1 = Link('d',0.15185,'a',obj.linkLengths(1),'alpha',pi/2,'qlim',deg2rad([-360 360]), 'offset',0);
             L2 = Link('d',0,'a',obj.linkLengths(2),'alpha',0,'qlim', deg2rad([-360 360]), 'offset',0);
             L3 = Link('d',0,'a',obj.linkLengths(3),'alpha',pi,'qlim', deg2rad([-360 360]), 'offset', 0);
@@ -27,34 +27,17 @@ classdef SixDOFRobot
             robotModel = SerialLink([L1, L2, L3, L4, L5, L6], 'name', '6DOF Robot');
         end
         
-        function obj = updateJointAngles(obj, newAngles)
-    % Update the joint angles
-    obj.jointAngles = newAngles;
-    
-    % Set the link and joint thickness
-    linkColor = 'b'; % Color of the links
-    jointColor = 'r'; % Color of the joints
-    linkWidth = 0.02; % Width of the links
-    jointWidth = 0.02; % Width of the joints
+        function obj = updateJointAngles(obj, newAngles, baseTransform)
+            % Update the joint angles
+            obj.jointAngles = newAngles;
 
-    % Clear the previous plot
-    clf; 
-    
-    % Plot the robot with customized properties
-    obj.robot.plot(obj.jointAngles, 'noarrow');
-    set(findobj(gca, 'Type', 'line', 'Color', linkColor), 'LineWidth', linkWidth); % Set link thickness
-    set(findobj(gca, 'Type', 'line', 'Color', jointColor), 'MarkerSize', jointWidth); % Set joint thickness
-
-    % Set axes properties
-    grid on;
-    view(3);
-    axis equal;
-    title('6DOF Robot on Linear Rail');
-    xlabel('X-axis');
-    ylabel('Y-axis');
-    zlabel('Z-axis');
-end
-
+            % Set the robot's base transformation
+            obj.robot.base = baseTransform;
+            
+            % Plot the robot
+            obj.robot.plot(obj.jointAngles, 'noarrow');
+            
+        end
         
         function position = endEffectorPosition(obj)
             % Calculate the end-effector position
