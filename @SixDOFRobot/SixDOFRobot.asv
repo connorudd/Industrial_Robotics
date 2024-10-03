@@ -26,20 +26,23 @@ classdef SixDOFRobot
             % Create the serial link robot
             robotModel = SerialLink([L1, L2, L3, L4, L5, L6], 'name', '6DOF Robot');
             
-
+            robotModel.plot(0, '')
         end
         
         function obj = updateJointAngles(obj, newAngles, baseTransform)
             % Update the joint angles
             obj.jointAngles = newAngles;
-        
+
             % Set the robot's base transformation
             obj.robot.base = baseTransform;
             
+            
             % Plot the robot
-            obj.robot.plot(obj.jointAngles, 'noarrow');
-        
-
+            % obj.robot.plot(obj.jointAngles, 'noarrow');
+            
+            % obj.robot.plot(obj.jointAngles, 'noarrow');
+            % Plot the robot with specified line width
+            obj.robot.plot(obj.jointAngles, 'noarrow'); % Adjust LineWidth as needed
         end
         
         function position = endEffectorPosition(obj)
