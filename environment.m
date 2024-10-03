@@ -23,6 +23,15 @@ classdef environment
             obj.addFence(0.0008);  % Add fence at position (1, 1, 1)
             obj.addFence2(0.0008);
 
+            % Walls and floor
+             % Add concrete floor
+            surf([-1.8,-1.8;1.8,1.8], [-1.8,1.8;-1.8,1.8], [0.0,0.0;0.0,0.0], ...
+                'CData', imread('concrete.jpg'), 'FaceColor', 'texturemap');
+        
+            % Add wall
+            surf([-1.8,-1.8;1.8,1.8], [1,1;1,1], [-1.8,1.8;-1.8,1.8], ...
+                'CData', imread('bakery.jpg'), 'FaceColor', 'texturemap');
+
             hold off;
             drawnow;
             pause; 
