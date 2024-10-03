@@ -25,11 +25,15 @@ classdef environment
 
             % Walls and floor
              % Add concrete floor
-            surf([-1.8,-1.8;1.8,1.8], [-1.8,1.8;-1.8,1.8], [0.0,0.0;0.0,0.0], ...
+            surf([-3,-3;3,3], [-3,3;-3,3], [0.0,0.0;0.0,0.0], ...
                 'CData', imread('concrete.jpg'), 'FaceColor', 'texturemap');
         
-            % Add wall
-            surf([-1.8,-1.8;1.8,1.8], [1,1;1,1], [-1.8,1.8;-1.8,1.8], ...
+            % Wall 
+            % Shifted to make the bottom of the image align with z = 0
+            surf([-3, 3; -3, 3], [3, 3; 3, 3], [3.6, 3.6; 0, 0], ...
+                'CData', imread('bakery.jpg'), 'FaceColor', 'texturemap');
+
+            surf([3, 3; 3, 3], [3, -3; 3, -3], [3.6, 3.6; 0, 0], ...
                 'CData', imread('bakery.jpg'), 'FaceColor', 'texturemap');
 
             hold off;
