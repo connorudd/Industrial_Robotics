@@ -15,7 +15,6 @@ classdef SixDOFRobot
         end
         
         function robotModel = createRobotModel(obj)
-            % Create the robot model using Robotics Toolbox
             
             L1 = Link('d',0.15185,'a',obj.linkLengths(1),'alpha',pi/2,'qlim',deg2rad([-360 360]), 'offset',0);
             L2 = Link('d',0,'a',obj.linkLengths(2),'alpha',0,'qlim', deg2rad([-360 360]), 'offset',0);
