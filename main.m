@@ -1,10 +1,18 @@
 classdef main
     methods(Static)
         function run()
+            figure;
+            hold on;
+            axis equal;
+            xlabel('X');
+            ylabel('Y');
+            zlabel('Z');
+            view(3);
             % Create an instance of the Dobot robot
             robot = Dobot();
+            robot_2 = main.createRobot();
         end
-        function createRobot()
+        function robot = createRobot()
             % Define the lengths of the robot links
             linkLengths = [0, 0.5, 0.5, 0.5, 0.5, 0.5]; % Adjust lengths as needed
             
