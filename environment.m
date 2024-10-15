@@ -1,6 +1,7 @@
 classdef environment
     methods
         function plotEnvironment(obj)
+            close all;
             % Set up the environment plot
             figure;
             hold on;
@@ -13,6 +14,7 @@ classdef environment
 
             % Create and plot the first robot (Dobot)
             robot1 = Dobot();  % Create an instance of the Dobot robot
+            
           
             % Create and plot the second robot (6-DOF)
             T_robot2 = transl(2, 0, 0);  % Translate the second robot along the X-axis
