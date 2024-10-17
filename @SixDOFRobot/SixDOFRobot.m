@@ -190,7 +190,7 @@ classdef SixDOFRobot < RobotBaseClass
 %% Test Move Dobot
     function TestMoveSixDOF(self)
             qPath = jtraj(self.model.qlim(:,1)',self.model.qlim(:,2)',50);                       
-            for i = 1:50                
+            for i = 1:50              
                 self.model.animate(self.RealQToModelQ(qPath(i,:)));
                 pause(0.2);
             end
