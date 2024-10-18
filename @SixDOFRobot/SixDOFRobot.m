@@ -164,10 +164,11 @@ classdef SixDOFRobot < RobotBaseClass
             self.PlotAndColourRobot();
         end
 
+
 %% CreateModel
         function CreateModel(self)       
             link(1) = Link('d',0.15185,'a',0,'alpha',pi/2,'qlim',deg2rad([-360 360]), 'offset',0);
-            link(2) = Link('d',0,'a',0.2,'alpha',0,'qlim', deg2rad([-360 360]), 'offset',0);
+            link(2) = Link('d',0,'a',0.7,'alpha',0,'qlim', deg2rad([-360 360]), 'offset', 0);
             link(3) = Link('d',0,'a',0.2,'alpha',pi,'qlim', deg2rad([-360 360]), 'offset', 0);
             link(4) = Link('d',0.13105,'a',0.2,'alpha',pi/2,'qlim',deg2rad([-360 360]),'offset', 0);
             link(5) = Link('d',0.08535,'a',0.2,'alpha',-pi/2,'qlim',deg2rad([-360,360]), 'offset',0);

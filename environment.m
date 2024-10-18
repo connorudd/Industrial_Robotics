@@ -13,30 +13,30 @@ classdef environment
             grid on;
 
             % Create and plot the first robot (Dobot)
-            robot1 = Dobot();  % Create an instance of the Dobot robot
+            % robot1 = Dobot();  % Create an instance of the Dobot robot
             
           
             % Create and plot the second robot (6-DOF)
             %T_robot2 = transl(2, 0, 0);  % Translate the second robot along the X-axis
             robot2 = SixDOFRobot();
             
-            % Add the fence PLY model
-            obj.addFence(0.001);  % Add fence at position (1, 1, 1)
-            obj.addFence2(0.001);
-            obj.addTable(0.004);
+            % % Add the fence PLY model
+            % obj.addFence(0.001);  % Add fence at position (1, 1, 1)
+            % obj.addFence2(0.001);
+            % obj.addTable(0.004);
 
             % Walls and floor
-             % Add concrete floor
-            surf([-3,-3;3,3], [-3,3;-3,3], [0.0,0.0;0.0,0.0], ...
-                'CData', imread('concrete.jpg'), 'FaceColor', 'texturemap');
-        
-            % Wall 
-            % Shifted to make the bottom of the image align with z = 0
-            surf([-3, 3; -3, 3], [3, 3; 3, 3], [3.6, 3.6; 0, 0], ...
-                'CData', imread('bakery.jpg'), 'FaceColor', 'texturemap');
-
-            surf([3, 3; 3, 3], [3, -3; 3, -3], [3.6, 3.6; 0, 0], ...
-                'CData', imread('bakery.jpg'), 'FaceColor', 'texturemap');
+            %  % Add concrete floor
+            % surf([-3,-3;3,3], [-3,3;-3,3], [0.0,0.0;0.0,0.0], ...
+            %     'CData', imread('concrete.jpg'), 'FaceColor', 'texturemap');
+            % 
+            % % Wall 
+            % % Shifted to make the bottom of the image align with z = 0
+            % surf([-3, 3; -3, 3], [3, 3; 3, 3], [3.6, 3.6; 0, 0], ...
+            %     'CData', imread('bakery.jpg'), 'FaceColor', 'texturemap');
+            % 
+            % surf([3, 3; 3, 3], [3, -3; 3, -3], [3.6, 3.6; 0, 0], ...
+            %     'CData', imread('bakery.jpg'), 'FaceColor', 'texturemap');
 
             hold off;
             drawnow;
