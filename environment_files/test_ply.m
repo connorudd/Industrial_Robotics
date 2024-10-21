@@ -1,5 +1,5 @@
 % Read the PLY file using a built-in function
-[f, v, data] = plyread('SixDOFRobotLink3.ply', 'tri');
+[f, v, data] = plyread('estop.ply', 'tri');
 vertexColours = [data.vertex.red, data.vertex.green, data.vertex.blue] / 255;
 
 % Display the mesh

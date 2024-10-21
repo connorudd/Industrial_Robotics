@@ -25,7 +25,7 @@ classdef environment
             obj.addFence2(0.001);
             obj.addTable(0.004);
             obj.addExtinguisher(3);
-            obj.addEstop(0.0008);
+            obj.addEstop(0.0);
 
             % Walls and floor
              % Add concrete floor
@@ -236,7 +236,7 @@ classdef environment
 
           function addEstop(obj, scale)
             % Read the PLY file containing the brick's mesh
-            [f, v, data] = plyread('environment_files/estop.ply', 'tri');
+            [f, v, data] = plyread('environment_files/fireExtinguisher.ply', 'tri');
         
             % Get the vertex colors if available
             if isfield(data.vertex, 'red') && isfield(data.vertex, 'green') && isfield(data.vertex, 'blue')
@@ -248,8 +248,8 @@ classdef environment
         
             % Rotation matrix (90 degrees around z-axis)
             R = [-1  0  0;
-                 0  0  1;
-                 0 1  0];
+                 0  1  0;
+                 0 0  1];
 
             % Scale the vertices
             v_scaled = v * scale;  % Scale the vertices by the given factor
