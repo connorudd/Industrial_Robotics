@@ -21,34 +21,33 @@ classdef environment
             % robot2 = SixDOFRobot();
             
             % Add the fence PLY model
-            obj.addFence(0.004);  % Add fence at position (1, 1, 1)
-            obj.addFence2(0.004);
+            obj.addFence(0.002);  % Add fence at position (1, 1, 1)
+            obj.addFence2(0.002);
             obj.addTable(0.005);
-            obj.addExtinguisher(5);
+            obj.addExtinguisher(4);
             obj.addEstop(1.2);
-            obj.addSupervisor(3);
+            obj.addSupervisor(2);
             obj.addPlates(0.1);
-            obj.addBowl(4);
-            obj.addOven(1);
+            obj.addBowl(2);
+            obj.addOven(0.7);
             obj.addShape1(0.0025);
             obj.addShape2(0.0025);
             obj.addShape3(0.0025);
 
-
             % Walls and floor
              % Add concrete floor
-            surf([-9,-9;9,9], [-9,9;-9,9], [0.0,0.0;0.0,0.0], ...
+            surf([-5,-5;5,5], [-5,5;-5,5], [0.0,0.0;0.0,0.0], ...
                 'CData', imread('concrete.jpg'), 'FaceColor', 'texturemap');
 
             % Wall 
-            surf([-9, 9; -9, 9], [9, 9; 9, 9], [10.8, 10.8; 0, 0], ...
+            surf([-5, 5; -5, 5], [5, 5; 5, 5], [6.8, 6.8; 0, 0], ...
                 'CData', imread('bakery.jpg'), 'FaceColor', 'texturemap');
 
-            surf([9, 9; 9, 9], [9, -9; 9, -9], [10.8, 10.8; 0, 0], ...
+            surf([5, 5; 5, 5], [5, -5; 5, -5], [6.8, 6.8; 0, 0], ...
                 'CData', imread('bakery.jpg'), 'FaceColor', 'texturemap');
 
             hold off;
-            axis([-3 3 -2 2 0 10]); 
+           
             drawnow;
             % pause;
         end
@@ -78,8 +77,8 @@ classdef environment
         
             % Desired final position of the fence
               desiredPositions = [
-                0, 5.2, 4
-                0, -5.2, 4  % Position for the second fence
+                0, 2.6, 2
+                0, -2.6, 2  % Position for the second fence
                 ];
               
             for i = 1:size(desiredPositions, 1)
@@ -123,8 +122,8 @@ classdef environment
         
             % Desired final position of the fence
               desiredPositions = [
-                5.2, 0, 4
-                -5.2, 0 , 4
+                2.6, 0, 2
+                -2.6, 0 , 2
                 ];
               
             for i = 1:size(desiredPositions, 1)
@@ -212,7 +211,7 @@ classdef environment
         
             % Desired position of the table
               desiredPositions = [
-                8.3, 8.65, 2.5
+                4.3, 4.65, 2.5
                 ];
               
             for i = 1:size(desiredPositions, 1)
@@ -256,7 +255,7 @@ classdef environment
         
             % Desired position of the table
               desiredPositions = [
-                8.7, 2, 2
+                4.7, 2, 2
                 ];
               
             for i = 1:size(desiredPositions, 1)
@@ -300,7 +299,7 @@ classdef environment
         
             % Desired position of the table
               desiredPositions = [
-                8, 4, 3
+                4, 2.7, 2
                 ];
               
             for i = 1:size(desiredPositions, 1)
@@ -345,9 +344,9 @@ classdef environment
         
             % Desired position of the table
               desiredPositions = [
-                0.75, -0.5, 1
-                0.5, -0.75, 1
-                0.25, -0.5, 1
+                0.3, -0.5, 1.0
+                0.5, -0.6, 1.0
+                0.7, -0.5, 1.0
                 ];
               
             for i = 1:size(desiredPositions, 1)
@@ -391,7 +390,7 @@ classdef environment
         
             % Desired position of the table
               desiredPositions = [
-                0, 0, 1.1
+                0, 0, 1.05
                 ];
               
             for i = 1:size(desiredPositions, 1)
@@ -435,7 +434,7 @@ classdef environment
         
             % Desired position of the table
               desiredPositions = [
-                0, 0.75, 1.4
+                0, 0.53, 1.3
                 ];
               
             for i = 1:size(desiredPositions, 1)
