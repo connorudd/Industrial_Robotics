@@ -164,19 +164,42 @@ classdef SixDOFRobot < RobotBaseClass
             self.PlotAndColourRobot();
         end
 
+ %% Move to Target Position
+        function moveToTarget(self, targetPosition)
+            % Create a transformation matrix for the target position
+            T_target = transl(targetPosition(1), targetPosition(2), targetPosition(3));
+
+            % Calculate the inverse kinematics to find joint angles
+            q_sol = self.model.ikine(T_target, 'mask', [1, 1, 1, 0, 0, 0]); % Mask to consider only position
+            
+            if isempty(q_sol)
+                error('No solution found for the target position');
+            else
+                % Move the robot to the calculated joint angles
+                self.model.animate(q_sol);
+            end
+        end
+
 
 %% CreateModel
         function CreateModel(self)       
-            link(1) = Link('d',0.2,'a',0,'alpha',0,'qlim',deg2rad([-360 360]), 'offset',0);
-            link(2) = Link('d',0.5,'a',0.15,'alpha',pi/2,'qlim', deg2rad([-360 360]), 'offset', 0);
-            link(3) = Link('d',-0.2,'a',0.4,'alpha',0,'qlim', deg2rad([-360 360]), 'offset', -pi/2);
-            link(4) = Link('d',0.2,'a',0.4,'alpha',0,'qlim',deg2rad([-360 360]),'offset', -pi/2);
-            link(5) = Link('d',-0.2,'a',0.4,'alpha',0,'qlim',deg2rad([-360,360]), 'offset',0);
-            link(6) = Link('d',0.1,'a',0.5,'alpha',0,'qlim',deg2rad([-360,360]), 'offset', 0);
+            % link(1) = Link('d',0.2,'a',0,'alpha',0,'qlim',deg2rad([-360 360]), 'offset',0);
+            % link(2) = Link('d',0.5,'a',0.15,'alpha',pi/2,'qlim', deg2rad([-360 360]), 'offset', 0);
+            % link(3) = Link('d',-0.2,'a',0.4,'alpha',0,'qlim', deg2rad([-360 360]), 'offset', -pi/2);
+            % link(4) = Link('d',0.2,'a',0.4,'alpha',0,'qlim',deg2rad([-360 360]),'offset', -pi/2);
+            % link(5) = Link('d',-0.2,'a',0.4,'alpha',0,'qlim',deg2rad([-360,360]), 'offset',0);
+            % link(6) = Link('d',0.1,'a',0.5,'alpha',0,'qlim',deg2rad([-360,360]), 'offset', 0);
+            link(1) = Link('d', 0.3, 'a', 0, 'alpha', pi/2, 'qlim', deg2rad([-360 360]), 'offset', 0);
+            link(2) = Link('d', -0.5, 'a', 0, 'alpha', 0, 'qlim', deg2rad([-360 360]), 'offset', 0); 
+            link(3) = Link('d', 0, 'a', 0, 'alpha', -pi/2, 'qlim', deg2rad([-360 360]), 'offset', 0);
+            link(4) = Link('d', -0.2, 'a', 0, 'alpha', 0, 'qlim', deg2rad([-360 360]), 'offset', 0);
+            link(5) = Link('d', 0, 'a', 0, 'alpha', pi/2, 'qlim', deg2rad([-360 360]), 'offset', 0);
+            link(6) = Link('d', -0.25, 'a', 0, 'alpha', 0, 'qlim', deg2rad([-360 360]), 'offset', 0);
+
 
             self.model = SerialLink(link,'name',self.name);
 
-            self.model.base = transl(1, 0, 2);
+            self.model.base = transl(0.5, 0, 1);
         end   
     end
     

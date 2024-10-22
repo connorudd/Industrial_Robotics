@@ -13,23 +13,27 @@ classdef environment
             grid on;
 
             % Create and plot the first robot (Dobot)
-            robot1 = Dobot();  % Create an instance of the Dobot robot
-            
-          
+            % robot1 = Dobot();  % Create an instance of the Dobot robot
+            % 
+            % 
             % Create and plot the second robot (6-DOF)
-            %T_robot2 = transl(2, 0, 0);  % Translate the second robot along the X-axis
-            robot2 = SixDOFRobot();
+            % T_robot2 = transl(2, 0, 0);  % Translate the second robot along the X-axis
+            % robot2 = SixDOFRobot();
             
             % Add the fence PLY model
             obj.addFence(0.004);  % Add fence at position (1, 1, 1)
             obj.addFence2(0.004);
-            obj.addTable(0.01);
+            obj.addTable(0.005);
             obj.addExtinguisher(5);
             obj.addEstop(1.2);
             obj.addSupervisor(3);
-            obj.addPlates(0.2);
-            obj.addBowl(8);
-            obj.addOven(2);
+            obj.addPlates(0.1);
+            obj.addBowl(4);
+            obj.addOven(1);
+            obj.addShape1(0.0025);
+            obj.addShape2(0.0025);
+            obj.addShape3(0.0025);
+
 
             % Walls and floor
              % Add concrete floor
@@ -44,8 +48,9 @@ classdef environment
                 'CData', imread('bakery.jpg'), 'FaceColor', 'texturemap');
 
             hold off;
+            axis([-3 3 -2 2 0 10]); 
             drawnow;
-            pause; 
+            % pause;
         end
 
           function addFence(obj, scale)
@@ -163,7 +168,7 @@ classdef environment
         
             % Desired position of the table
               desiredPositions = [
-                0, 0, 1.6
+                0, 0, 0.8
                 ];
               
             for i = 1:size(desiredPositions, 1)
@@ -340,9 +345,9 @@ classdef environment
         
             % Desired position of the table
               desiredPositions = [
-                1, -1.5, 2
-                0.5, -1.5, 2
-                0, -1.5, 2
+                0.75, -0.5, 1
+                0.5, -0.75, 1
+                0.25, -0.5, 1
                 ];
               
             for i = 1:size(desiredPositions, 1)
@@ -386,7 +391,7 @@ classdef environment
         
             % Desired position of the table
               desiredPositions = [
-                0, 0, 2.3
+                0, 0, 1.1
                 ];
               
             for i = 1:size(desiredPositions, 1)
@@ -407,7 +412,7 @@ classdef environment
 
         function addOven(obj, scale)
             % Read the PLY file containing the brick's mesh
-            [f, v, data] = plyread('environment_files/cake.ply', 'tri');
+            [f, v, data] = plyread('environment_files/oven.ply', 'tri');
         
             % Get the vertex colors if available
             if isfield(data.vertex, 'red') && isfield(data.vertex, 'green') && isfield(data.vertex, 'blue')
@@ -430,7 +435,142 @@ classdef environment
         
             % Desired position of the table
               desiredPositions = [
-                0, 1.5, 3
+                0, 0.75, 1.4
+                ];
+              
+            for i = 1:size(desiredPositions, 1)
+                % Calculate the translation to move the fence to the desired position
+                translation = desiredPositions(i, :) - mean(v_rotated, 1);  % Translate to center around the desired position
+        
+                % Translate the vertices based on the calculated translation
+                v_translated = v_rotated + translation;  % Translate the vertices
+        
+                % Plot the fence using trisurf
+                trisurf(f, v_translated(:, 1), v_translated(:, 2), v_translated(:, 3), ...
+                        'FaceVertexCData', vertexColours, 'EdgeColor', 'interp', 'EdgeLighting', 'flat');
+            end
+        
+            % Set lighting to see colors of the bricks
+            lighting gouraud;
+        end
+
+
+        function addShape1(obj, scale)
+            % Read the PLY file containing the brick's mesh
+            [f, v, data] = plyread('environment_files/blue_octagon.ply', 'tri');
+        
+            % Get the vertex colors if available
+            if isfield(data.vertex, 'red') && isfield(data.vertex, 'green') && isfield(data.vertex, 'blue')
+                vertexColours = [data.vertex.red, data.vertex.green, data.vertex.blue] / 255;
+            else
+                % Default color if vertex colors are not available
+                vertexColours = repmat([0.8, 0.5, 0.5], size(v, 1), 1);  % Red color
+            end
+        
+            % Rotation matrix (90 degrees around z-axis)
+            R = [0  1  0;
+                 -1  0  0;
+                 0 0  1];
+
+            % Scale the vertices
+            v_scaled = v * scale;  % Scale the vertices by the given factor
+        
+            % Rotate the vertices
+            v_rotated = (R * v_scaled')';  % Rotate the vertices
+        
+            % Desired position of the table
+              desiredPositions = [
+                -0.55, -0.2, 1
+                ];
+              
+            for i = 1:size(desiredPositions, 1)
+                % Calculate the translation to move the fence to the desired position
+                translation = desiredPositions(i, :) - mean(v_rotated, 1);  % Translate to center around the desired position
+        
+                % Translate the vertices based on the calculated translation
+                v_translated = v_rotated + translation;  % Translate the vertices
+        
+                % Plot the fence using trisurf
+                trisurf(f, v_translated(:, 1), v_translated(:, 2), v_translated(:, 3), ...
+                        'FaceVertexCData', vertexColours, 'EdgeColor', 'interp', 'EdgeLighting', 'flat');
+            end
+        
+            % Set lighting to see colors of the bricks
+            lighting gouraud;
+        end
+
+
+        function addShape2(obj, scale)
+            % Read the PLY file containing the brick's mesh
+            [f, v, data] = plyread('environment_files/green_square.ply', 'tri');
+        
+            % Get the vertex colors if available
+            if isfield(data.vertex, 'red') && isfield(data.vertex, 'green') && isfield(data.vertex, 'blue')
+                vertexColours = [data.vertex.red, data.vertex.green, data.vertex.blue] / 255;
+            else
+                % Default color if vertex colors are not available
+                vertexColours = repmat([0.8, 0.5, 0.5], size(v, 1), 1);  % Red color
+            end
+        
+            % Rotation matrix (90 degrees around z-axis)
+            R = [0  1  0;
+                 -1  0  0;
+                 0 0  1];
+
+            % Scale the vertices
+            v_scaled = v * scale;  % Scale the vertices by the given factor
+        
+            % Rotate the vertices
+            v_rotated = (R * v_scaled')';  % Rotate the vertices
+        
+            % Desired position of the table
+              desiredPositions = [
+                -0.4, -0.2, 1
+                ];
+              
+            for i = 1:size(desiredPositions, 1)
+                % Calculate the translation to move the fence to the desired position
+                translation = desiredPositions(i, :) - mean(v_rotated, 1);  % Translate to center around the desired position
+        
+                % Translate the vertices based on the calculated translation
+                v_translated = v_rotated + translation;  % Translate the vertices
+        
+                % Plot the fence using trisurf
+                trisurf(f, v_translated(:, 1), v_translated(:, 2), v_translated(:, 3), ...
+                        'FaceVertexCData', vertexColours, 'EdgeColor', 'interp', 'EdgeLighting', 'flat');
+            end
+        
+            % Set lighting to see colors of the bricks
+            lighting gouraud;
+        end
+
+
+        function addShape3(obj, scale)
+            % Read the PLY file containing the brick's mesh
+            [f, v, data] = plyread('environment_files/red_hexagon.ply', 'tri');
+        
+            % Get the vertex colors if available
+            if isfield(data.vertex, 'red') && isfield(data.vertex, 'green') && isfield(data.vertex, 'blue')
+                vertexColours = [data.vertex.red, data.vertex.green, data.vertex.blue] / 255;
+            else
+                % Default color if vertex colors are not available
+                vertexColours = repmat([0.8, 0.5, 0.5], size(v, 1), 1);  % Red color
+            end
+        
+            % Rotation matrix (90 degrees around z-axis)
+            R = [0  1  0;
+                 -1  0  0;
+                 0 0  1];
+
+            % Scale the vertices
+            v_scaled = v * scale;  % Scale the vertices by the given factor
+        
+            % Rotate the vertices
+            v_rotated = (R * v_scaled')';  % Rotate the vertices
+        
+            % Desired position of the table
+              desiredPositions = [
+                -0.25, -0.2, 1
                 ];
               
             for i = 1:size(desiredPositions, 1)
