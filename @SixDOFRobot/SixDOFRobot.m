@@ -150,7 +150,7 @@ classdef SixDOFRobot < RobotBaseClass
         plyFileNameStem = 'SixDOFRobot';
 
         %> defaultRealQ 
-        defaultRealQ  = [0,pi/4,pi/4,0,0,0];
+        defaultRealQ  = [0,0,0,0,0,0];
     end
 
     methods (Access = public) 
@@ -167,16 +167,16 @@ classdef SixDOFRobot < RobotBaseClass
 
 %% CreateModel
         function CreateModel(self)       
-            link(1) = Link('d',0.15185,'a',0,'alpha',pi/2,'qlim',deg2rad([-360 360]), 'offset',0);
-            link(2) = Link('d',0,'a',0.7,'alpha',0,'qlim', deg2rad([-360 360]), 'offset', 0);
-            link(3) = Link('d',0,'a',-0.2,'alpha',pi/2,'qlim', deg2rad([-360 360]), 'offset', pi/4);
-            % link(4) = Link('d',0.13105,'a',0.2,'alpha',pi/2,'qlim',deg2rad([-360 360]),'offset', 0);
-            % link(5) = Link('d',0.08535,'a',0.2,'alpha',-pi/2,'qlim',deg2rad([-360,360]), 'offset',0);
-            % link(6) = Link('d',0.0921,'a',0.2,'alpha',0,'qlim',deg2rad([-360,360]), 'offset', 0);
+            link(1) = Link('d',0.2,'a',0,'alpha',0,'qlim',deg2rad([-360 360]), 'offset',0);
+            link(2) = Link('d',0.5,'a',0.15,'alpha',pi/2,'qlim', deg2rad([-360 360]), 'offset', 0);
+            link(3) = Link('d',-0.2,'a',0.4,'alpha',0,'qlim', deg2rad([-360 360]), 'offset', -pi/2);
+            link(4) = Link('d',0.2,'a',0.4,'alpha',0,'qlim',deg2rad([-360 360]),'offset', -pi/2);
+            link(5) = Link('d',-0.2,'a',0.4,'alpha',0,'qlim',deg2rad([-360,360]), 'offset',0);
+            link(6) = Link('d',0.1,'a',0.5,'alpha',0,'qlim',deg2rad([-360,360]), 'offset', 0);
 
             self.model = SerialLink(link,'name',self.name);
 
-            self.model.base = transl(2, 0, 1);
+            self.model.base = transl(1, 0, 2);
         end   
     end
     

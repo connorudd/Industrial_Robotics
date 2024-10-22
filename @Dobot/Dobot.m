@@ -36,7 +36,7 @@ classdef Dobot < RobotBaseClass
 
             self.model = SerialLink(link,'name',self.name);
 
-            self.model.base = transl(0, 0, 1);
+            self.model.base = transl(-1, 0, 2);
         end   
     end
     
