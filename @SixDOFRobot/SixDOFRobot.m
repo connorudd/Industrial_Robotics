@@ -17,33 +17,33 @@ classdef SixDOFRobot < RobotBaseClass
             self.PlotAndColourRobot();
         end
 
- %% Move to Target Position
-    function moveToTarget(self, targetPosition)
-        % Create a transformation matrix for the target position
-        T_target = transl(targetPosition(1), targetPosition(2), targetPosition(3));
-
-        % Calculate the inverse kinematics to find joint angles
-        q_sol = self.model.ikine(T_target, 'mask', [1, 1, 1, 0, 0, 0]); % Mask to consider only position
-
-        if isempty(q_sol)
-            error('No solution found for the target position');
-        else
-            % Get the current joint angles
-            q_current = self.model.getpos();
-
-            % Define the number of steps for smooth animation
-            numSteps = 50;
-
-            % Interpolate between the current and target joint angles
-            qMatrix = jtraj(q_current, q_sol, numSteps);
-
-            % Animate the robot movement step by step
-            for i = 1:numSteps
-                self.model.animate(qMatrix(i, :));
-                pause(0.05); % Pause to control the speed of the animation
-            end
-        end
-    end
+ % %% Move to Target Position
+ %    function moveToTarget(self, targetPosition)
+ %        % Create a transformation matrix for the target position
+ %        T_target = transl(targetPosition(1), targetPosition(2), targetPosition(3));
+ % 
+ %        % Calculate the inverse kinematics to find joint angles
+ %        q_sol = self.model.ikine(T_target, 'mask', [1, 1, 1, 0, 0, 0]); % Mask to consider only position
+ % 
+ %        if isempty(q_sol)
+ %            error('No solution found for the target position');
+ %        else
+ %            % Get the current joint angles
+ %            q_current = self.model.getpos();
+ % 
+ %            % Define the number of steps for smooth animation
+ %            numSteps = 50;
+ % 
+ %            % Interpolate between the current and target joint angles
+ %            qMatrix = jtraj(q_current, q_sol, numSteps);
+ % 
+ %            % Animate the robot movement step by step
+ %            for i = 1:numSteps
+ %                self.model.animate(qMatrix(i, :));
+ %                pause(0.05); % Pause to control the speed of the animation
+ %            end
+ %        end
+ %    end
 
 % %% Move to Target Position with Collision Avoidance
 % function moveToTarget(self, targetPosition)
@@ -60,23 +60,30 @@ classdef SixDOFRobot < RobotBaseClass
 %         q_current = self.model.getpos();
 % 
 %         % Define the number of steps for smooth animation
-%         numSteps = 50;
+%         numSteps = 150;
 % 
 %         % Interpolate between the current and target joint angles
 %         qMatrix = jtraj(q_current, q_sol, numSteps);
 % 
 %         % Define obstacle boundaries
-%         x_min = 0.2; x_max = 0.3;
-%         y_min = 0.25; y_max = 0.75;
-%         z_min = 1.0; z_max = 1.5;
+%         x_min = 0.15; x_max = 0.35;
+%         y_min = 0.2; y_max = 0.8;
+%         z_min = 0.95; z_max = 2;
 % 
 %         % Check for collision and animate the robot movement
 %         for i = 1:numSteps
 %             % Get the transformation matrix for the current joint configuration
 %             T_current = self.model.fkine(qMatrix(i, :));
 % 
+% 
 %             % Extract position from transformation matrix
 %             current_position = T_current.t;  % Use the 't' property to get translation
+% 
+%               % Print the end-effector position in the terminal
+%             disp(['End-effector position at step ', num2str(i), ': (', ...
+%                   num2str(current_position(1)), ', ', ...
+%                   num2str(current_position(2)), ', ', ...
+%                   num2str(current_position(3)), ')']);
 % 
 %             % Check if the current position is within the obstacle bounds
 %             if current_position(1) >= x_min && current_position(1) <= x_max && ...
@@ -93,117 +100,81 @@ classdef SixDOFRobot < RobotBaseClass
 %         end
 %     end
 % end
-% %% Move to Target Position with Ellipsoid-Based Collision Avoidance
-% function moveToTarget(self, targetPosition)
-%     % Create a transformation matrix for the target position
-%     T_target = transl(targetPosition(1), targetPosition(2), targetPosition(3));
-% 
-%     % Calculate the inverse kinematics to find joint angles
-%     q_sol = self.model.ikine(T_target, 'mask', [1, 1, 1, 0, 0, 0]);
-% 
-%     if isempty(q_sol)
-%         error('No solution found for the target position');
-%     else
-%         % Get the current joint angles
-%         q_current = self.model.getpos();
-% 
-%         % Define the number of steps for smooth animation
-%         numSteps = 50;
-% 
-%         % Interpolate between the current and target joint angles
-%         qMatrix = jtraj(q_current, q_sol, numSteps);
-% 
-%         % Define the obstacle ellipsoid
-%         obstacle_center = [0.25, 0.5, 1.25];
-%         obstacle_radii = [0.05, 0.25, 0.25];
-% 
-%        % Define ellipsoids for each link based on DH parameters
-%     linkEllipsoids = {
-%         struct('center', [0, 0, 0], 'radii', [0.05, 0.05, 0.15]),  % Link 1
-%         struct('center', [0, 0, 0], 'radii', [0.05, 0.05, 0.25]),  % Link 2
-%         struct('center', [0, 0, 0], 'radii', [0.05, 0.05, 0.15]),  % Link 3
-%         struct('center', [0, 0, 0], 'radii', [0.05, 0.05, 0.1]),   % Link 4
-%         struct('center', [0, 0, 0], 'radii', [0.05, 0.05, 0.1]),   % Link 5
-%         struct('center', [0, 0, 0], 'radii', [0.05, 0.05, 0.1])    % Link 6
-%     };
-% 
-%         for i = 1:numSteps
-%             % Flag for collision detection
-%             % collisionDetected = false;
-% 
-%             % Get transformations for all links at the current step
-%             T_links = self.model.fkine(qMatrix(i, :));
-% 
-%             for j = 1:length(linkEllipsoids)
-%                 % Get the position of link j using its transformation
-%                 T_link = T_links(j); % Transformation matrix for link j
-%                 linkEllipsoids{j}.center = T_link.t; % Update center position
-% 
-%                       % Debugging lines
-%         disp('Obstacle Center:');
-%         disp(obstacle_center);
-%         disp('Obstacle Radii:');
-%         disp(obstacle_radii);
-%                 disp('Length of linkEllipsoids:');
-%         disp(length(linkEllipsoids));
-%         disp('Link Ellipsoid Center:');
-%     disp(linkEllipsoids{j}.center);
-%                 % Check for collision with the obstacle ellipsoid
-%                 if ellipsoidCollision(linkEllipsoids{j}, obstacle_center, obstacle_radii)
-%                     warning('Collision detected at link %d! Adjusting trajectory.', j);
-%                     return; % Exit if collision is detected
-%                 end
-%             end
-% 
-%             % If no collision, animate the movement
-%             self.model.animate(qMatrix(i, :));
-%             pause(0.05);
-%         end
-%     end
-% end
-% 
-% %% Ellipsoid Collision Detection
-% function isColliding = ellipsoidCollision(linkEllipsoid, obstacleCenter, obstacleRadii)
-%     % Check for proper input types and sizes
-%     if ~isfield(linkEllipsoid, 'center') || ~isfield(linkEllipsoid, 'radii')
-%         error('linkEllipsoid must have fields: center and radii');
-%     end
-% 
-%     if ~isequal(size(linkEllipsoid.center), [1, 3]) || ~isequal(size(obstacleCenter), [1, 3]) || ~isequal(size(obstacleRadii), [1, 3])
-%         error('Inputs must be 1x3 vectors');
-%     end
-% 
-%     % Debugging: Print input values
-%     disp('Link Ellipsoid Center:');
-%     disp(linkEllipsoid.center);
-%     disp('Obstacle Center:');
-%     disp(obstacleCenter);
-%     disp('Obstacle Radii:');
-%     disp(obstacleRadii);
-% 
-%     % Calculate the Mahalanobis distance for ellipsoid intersection
-%     d = (linkEllipsoid.center - obstacleCenter) ./ obstacleRadii;
-% 
-%     % Debugging: Print the Mahalanobis distance components
-%     disp('Distance components (Mahalanobis):');
-%     disp(d);
-% 
-%     distance = sum(d .^ 2); % Mahalanobis distance
-% 
-%     % Debugging: Print the total distance
-%     disp('Total Mahalanobis Distance:');
-%     disp(distance);
-% 
-%     % Determine if there is a collision
-%     isColliding = distance < 1; % Collision if within ellipsoid
-% 
-%     % Debugging: Print the collision result
-%     if isColliding
-%         disp('Collision Detected!');
-%     else
-%         disp('No Collision.');
-%     end
-% end
+function moveToTarget(self, targetPosition)
+    % Create a transformation matrix for the target position
+    T_target = transl(targetPosition(1), targetPosition(2), targetPosition(3));
+
+    % Calculate the inverse kinematics to find joint angles
+    q_sol = self.model.ikine(T_target, 'mask', [1, 1, 1, 0, 0, 0]); % Mask to consider only position
+
+    if isempty(q_sol)
+        error('No solution found for the target position');
+    else
+        % Get the current joint angles
+        q_current = self.model.getpos();
+
+        % Define the number of steps for smooth animation
+        numSteps = 150;
+
+        % Interpolate between the current and target joint angles
+        qMatrix = jtraj(q_current, q_sol, numSteps);
+
+        % Define obstacle boundaries
+        x_min = 0.15; x_max = 0.35;
+        y_min = 0.2; y_max = 0.8;
+        z_min = 0.95; z_max = 2;
+
+        % Check for collision and animate the robot movement
+        for i = 1:numSteps
+            % Get the transformation matrix for the current joint configuration
+            T_current = self.model.fkine(qMatrix(i, :));
+
+            % Extract position from transformation matrix
+            current_position = T_current.t;
+
+            % Check if the current position is within the obstacle bounds
+            if current_position(1) >= x_min && current_position(1) <= x_max && ...
+               current_position(2) >= y_min && current_position(2) <= y_max && ...
+               current_position(3) >= z_min && current_position(3) <= z_max
+                warning('Collision detected! Recalculating path to avoid obstacle.');
+
+                % Recalculate path segments to avoid obstacle
+                [segment1, segment2] = recalculatePath(self, q_current, T_target, numSteps, x_min, x_max, y_min, y_max, z_min, z_max);
+                
+                % Animate each segment
+                for j = 1:size(segment1, 1)
+                    self.model.animate(segment1(j, :));
+                    pause(0.05);
+                end
+                for j = 1:size(segment2, 1)
+                    self.model.animate(segment2(j, :));
+                    pause(0.05);
+                end
+                return; % Exit the loop after animating the segments
+            end
+
+            % If no collision, animate the movement
+            self.model.animate(qMatrix(i, :));
+            pause(0.05);
+        end
+    end
+end
+
+function [qMatrix_segment1, qMatrix_segment2] = recalculatePath(self, q_start, T_target, numSteps, x_min, x_max, y_min, y_max, z_min, z_max)
+    % Define the intermediate waypoint
+    waypoint = transl(1.138, -0.394, 1.1);
+
+    % Calculate inverse kinematics to get joint values for the waypoint
+    q_waypoint = self.model.ikine(waypoint, 'mask', [1, 1, 1, 0, 0, 0]);
+    
+
+    % Create two-segment paths: q_start -> q_waypoint and q_waypoint -> q_goal
+    qMatrix_segment1 = jtraj(q_start, q_waypoint, numSteps);
+    q_goal = self.model.ikine(T_target, 'mask', [1, 1, 1, 0, 0, 0]);
+    qMatrix_segment2 = jtraj(q_waypoint, q_goal, numSteps);
+end
+
+
 
 
 
