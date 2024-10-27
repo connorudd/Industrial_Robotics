@@ -105,7 +105,7 @@ function moveToTarget(self, targetPosition)
     T_target = transl(targetPosition(1), targetPosition(2), targetPosition(3));
 
     % Calculate the inverse kinematics to find joint angles
-    q_sol = self.model.ikine(T_target, 'mask', [1, 1, 1, 0, 0, 0]);
+    q_sol = self.model.ikine(T_target, 'mask', [1, 1, 1, 0, 0, 0]); % Mask to consider only position
 
     if isempty(q_sol)
         error('No solution found for the target position');
@@ -115,6 +115,15 @@ function moveToTarget(self, targetPosition)
 
         % Define the number of steps for smooth animation
         numSteps = 150;
+        % Ensure sh
+         delta2 = q_sol(1) - q_current(1);
+            if abs(delta2) > pi
+                if delta2 > 0
+                    q_sol(1) = q_sol(1) - 2*pi;
+                else
+                    q_sol(1) = q_sol(1) + 2*pi;
+                end
+            end
 
         % Interpolate between the current and target joint angles
         qMatrix = jtraj(q_current, q_sol, numSteps);
@@ -132,87 +141,79 @@ function moveToTarget(self, targetPosition)
             % Extract position from transformation matrix
             current_position = T_current.t;
 
-            % Print the end-effector position in the terminal
-            disp(['End-effector position at step ', num2str(i), ': (', ...
-                  num2str(current_position(1)), ', ', ...
-                  num2str(current_position(2)), ', ', ...
-                  num2str(current_position(3)), ')']);
-
             % Check if the current position is within the obstacle bounds
             if current_position(1) >= x_min && current_position(1) <= x_max && ...
                current_position(2) >= y_min && current_position(2) <= y_max && ...
                current_position(3) >= z_min && current_position(3) <= z_max
-                warning('Collision detected! Recalculating path with waypoint.');
-
-                % Define a waypoint to avoid obstacles
-                waypointPosition = [1.2, 0, 1.2];
-
-                % Recalculate the path using the waypoint
-                qMatrix = recalculatePath(self, q_current, q_sol, waypointPosition, numSteps, ...
-                                          x_min, x_max, y_min, y_max, z_min, z_max);
-
-                % Restart the loop with the new path
-                i = 1;
-                continue;
+                warning('Collision detected! Recalculating path to avoid obstacle.');
+                q_now = self.model.getpos();
+                % Recalculate path segments to avoid obstacle
+                recalculatePath(self, q_now, T_target, numSteps, x_min, x_max, y_min, y_max, z_min, z_max);
+                return; % Exit the loop after animating the segments
             end
 
             % If no collision, animate the movement
             self.model.animate(qMatrix(i, :));
-            pause(0.05); % Pause to control the speed of the animation
+            pause(0.05);
         end
     end
 end
 
-function qMatrix = recalculatePath(self, q_start, q_goal, waypointPosition, numSteps, x_min, x_max, y_min, y_max, z_min, z_max)
-    % Create transformation matrix for the waypoint
-    T_waypoint = transl(waypointPosition(1), waypointPosition(2), waypointPosition(3));
-    q_waypoint = self.model.ikine(T_waypoint, 'mask', [1, 1, 1, 0, 0, 0]);
+function recalculatePath(self, q_start, T_target, numSteps, x_min, x_max, y_min, y_max, z_min, z_max)
+    % Define the intermediate waypoint
+    waypoint1 = transl(1.138, -0.394, 1.1);
+    waypoint2 = transl(0.729, -0.714, 1.1);
+    % waypoint3 = transl(0.467, -0.749, 1.1);
 
-    if isempty(q_waypoint)
-        error('No solution found for the waypoint position');
-    end
+    % Calculate inverse kinematics to get joint values for the waypoint
+    q_waypoint1 = self.model.ikine(waypoint1, 'mask', [1, 1, 1, 0, 0, 0]);
+    qMatrix_segment1 = jtraj(q_start, q_waypoint1, numSteps/2);
 
-    % Generate trajectories from start to waypoint, and waypoint to goal
-    qMatrix1 = jtraj(q_start, q_waypoint, numSteps);
-    qMatrix2 = jtraj(q_waypoint, q_goal, numSteps);
+    q_waypoint2 = self.model.ikine(waypoint2, 'mask', [1, 1, 1, 0, 0, 0]);
+    qMatrix_segment2 = jtraj(q_waypoint1, q_waypoint2, numSteps/2);
 
-    % Combine both trajectories
-    qMatrix_temp = [qMatrix1; qMatrix2];
-    
-    % Check for collisions and adjust if necessary
-    retry = true;
-    while retry
-        retry = false; % Assume path is valid initially
+    % q_waypoint3 = self.model.ikine(waypoint3, 'mask', [1, 1, 1, 0, 0, 0]);
+    % delta = q_waypoint3(1) - q_waypoint2(1);
+    % if abs(delta) > pi
+    %     if delta > 0
+    %         q_waypoint3(1) = q_waypoint3(1) - 2*pi;
+    %     else
+    %         q_waypoint3(1) = q_waypoint3(1) + 2*pi;
+    %     end
+    % end
+    % qMatrix_segment3 = jtraj(q_waypoint2, q_waypoint3, numSteps);
 
-        % Verify collision status along the path
-        for i = 1:size(qMatrix_temp, 1)
-            T_current = self.model.fkine(qMatrix_temp(i, :));
-            current_position = T_current.t;
-
-            if current_position(1) >= x_min && current_position(1) <= x_max && ...
-               current_position(2) >= y_min && current_position(2) <= y_max && ...
-               current_position(3) >= z_min && current_position(3) <= z_max
-                retry = true; % Collision detected, set retry flag
-                break;
-            end
-        end
-
-        % If collision-free, return the path
-        if ~retry
-            qMatrix = qMatrix_temp;
+    q_goal = self.model.ikine(T_target, 'mask', [1, 1, 1, 0, 0, 0]);
+    delta2 = q_goal(1) - q_waypoint2(1);
+    if abs(delta2) > pi
+        if delta2 > 0
+            q_goal(1) = q_goal(1) - 2*pi;
         else
-            % If there is a collision, slightly adjust the waypoint and retry
-            waypointPosition = waypointPosition + [0.05, 0.05, 0.05];
-            T_waypoint = transl(waypointPosition(1), waypointPosition(2), waypointPosition(3));
-            q_waypoint = self.model.ikine(T_waypoint, 'mask', [1, 1, 1, 0, 0, 0]);
-
-            % Recalculate paths with the adjusted waypoint
-            qMatrix1 = jtraj(q_start, q_waypoint, numSteps);
-            qMatrix2 = jtraj(q_waypoint, q_goal, numSteps);
-            qMatrix_temp = [qMatrix1; qMatrix2];
+            q_goal(1) = q_goal(1) + 2*pi;
         end
     end
+    qMatrix_segment4 = jtraj(q_waypoint2, q_goal, numSteps/2);
+
+    % Animate each segment
+    for j = 1:size(qMatrix_segment1, 1)
+        self.model.animate(qMatrix_segment1(j, :));
+        pause(0.05);
+    end
+    for j = 1:size(qMatrix_segment2, 1)
+        self.model.animate(qMatrix_segment2(j, :));
+        pause(0.05);
+    end
+    % for j = 1:size(qMatrix_segment3, 1)
+    %     self.model.animate(qMatrix_segment3(j, :));
+    %     pause(0.05);
+    % end
+    for j = 1:size(qMatrix_segment4, 1)
+        self.model.animate(qMatrix_segment4(j, :));
+        pause(0.05);
+    end
 end
+
+
 
 
 

@@ -16,90 +16,6 @@ classdef SixDOFRobot < RobotBaseClass
             self.homeQ = self.RealQToModelQ(self.defaultRealQ);
             self.PlotAndColourRobot();
         end
-
- % %% Move to Target Position
- %    function moveToTarget(self, targetPosition)
- %        % Create a transformation matrix for the target position
- %        T_target = transl(targetPosition(1), targetPosition(2), targetPosition(3));
- % 
- %        % Calculate the inverse kinematics to find joint angles
- %        q_sol = self.model.ikine(T_target, 'mask', [1, 1, 1, 0, 0, 0]); % Mask to consider only position
- % 
- %        if isempty(q_sol)
- %            error('No solution found for the target position');
- %        else
- %            % Get the current joint angles
- %            q_current = self.model.getpos();
- % 
- %            % Define the number of steps for smooth animation
- %            numSteps = 50;
- % 
- %            % Interpolate between the current and target joint angles
- %            qMatrix = jtraj(q_current, q_sol, numSteps);
- % 
- %            % Animate the robot movement step by step
- %            for i = 1:numSteps
- %                self.model.animate(qMatrix(i, :));
- %                pause(0.05); % Pause to control the speed of the animation
- %            end
- %        end
- %    end
-
-% %% Move to Target Position with Collision Avoidance
-% function moveToTarget(self, targetPosition)
-%     % Create a transformation matrix for the target position
-%     T_target = transl(targetPosition(1), targetPosition(2), targetPosition(3));
-% 
-%     % Calculate the inverse kinematics to find joint angles
-%     q_sol = self.model.ikine(T_target, 'mask', [1, 1, 1, 0, 0, 0]); % Mask to consider only position
-% 
-%     if isempty(q_sol)
-%         error('No solution found for the target position');
-%     else
-%         % Get the current joint angles
-%         q_current = self.model.getpos();
-% 
-%         % Define the number of steps for smooth animation
-%         numSteps = 150;
-% 
-%         % Interpolate between the current and target joint angles
-%         qMatrix = jtraj(q_current, q_sol, numSteps);
-% 
-%         % Define obstacle boundaries
-%         x_min = 0.15; x_max = 0.35;
-%         y_min = 0.2; y_max = 0.8;
-%         z_min = 0.95; z_max = 2;
-% 
-%         % Check for collision and animate the robot movement
-%         for i = 1:numSteps
-%             % Get the transformation matrix for the current joint configuration
-%             T_current = self.model.fkine(qMatrix(i, :));
-% 
-% 
-%             % Extract position from transformation matrix
-%             current_position = T_current.t;  % Use the 't' property to get translation
-% 
-%               % Print the end-effector position in the terminal
-%             disp(['End-effector position at step ', num2str(i), ': (', ...
-%                   num2str(current_position(1)), ', ', ...
-%                   num2str(current_position(2)), ', ', ...
-%                   num2str(current_position(3)), ')']);
-% 
-%             % Check if the current position is within the obstacle bounds
-%             if current_position(1) >= x_min && current_position(1) <= x_max && ...
-%                current_position(2) >= y_min && current_position(2) <= y_max && ...
-%                current_position(3) >= z_min && current_position(3) <= z_max
-%                 warning('Collision detected! Adjusting trajectory.');
-%                 % Exit or handle collision avoidance (e.g., by recalculating path)
-%                 return;
-%             end
-% 
-%             % If no collision, animate the movement
-%             self.model.animate(qMatrix(i, :));
-%             pause(0.05); % Pause to control the speed of the animation
-%         end
-%     end
-% end
 function moveToTarget(self, targetPosition)
     % Create a transformation matrix for the target position
     T_target = transl(targetPosition(1), targetPosition(2), targetPosition(3));
@@ -115,14 +31,29 @@ function moveToTarget(self, targetPosition)
 
         % Define the number of steps for smooth animation
         numSteps = 150;
+        
+        % Ensure shortest travel distance 
+        delta2 = q_sol(1) - q_current(1);
+        if abs(delta2) > pi
+            if delta2 > 0
+                q_sol(1) = q_sol(1) - 2 * pi;
+            else
+                q_sol(1) = q_sol(1) + 2 * pi;
+            end
+        end
 
         % Interpolate between the current and target joint angles
         qMatrix = jtraj(q_current, q_sol, numSteps);
 
-        % Define obstacle boundaries
-        x_min = 0.15; x_max = 0.35;
-        y_min = 0.2; y_max = 0.8;
-        z_min = 0.95; z_max = 2;
+        % Define obstacle boundaries (for previous obstacles)
+        x_min_obstacle = 0.15; x_max_obstacle = 0.35;
+        y_min_obstacle = 0.2; y_max_obstacle = 0.8;
+        z_min_obstacle = 0.95; z_max_obstacle = 2;
+
+        % Define table boundaries
+        x_min_table = -1; x_max_table = 1;
+        y_min_table = -1; y_max_table = 1;
+        z_min_table = 0; z_max_table = 0.9;
 
         % Check for collision and animate the robot movement
         for i = 1:numSteps
@@ -132,24 +63,27 @@ function moveToTarget(self, targetPosition)
             % Extract position from transformation matrix
             current_position = T_current.t;
 
-            % Check if the current position is within the obstacle bounds
-            if current_position(1) >= x_min && current_position(1) <= x_max && ...
-               current_position(2) >= y_min && current_position(2) <= y_max && ...
-               current_position(3) >= z_min && current_position(3) <= z_max
-                warning('Collision detected! Recalculating path to avoid obstacle.');
-
+            % Check if the current position is within the oven
+            if current_position(1) >= x_min_obstacle && current_position(1) <= x_max_obstacle && ...
+               current_position(2) >= y_min_obstacle && current_position(2) <= y_max_obstacle && ...
+               current_position(3) >= z_min_obstacle && current_position(3) <= z_max_obstacle
+                warning('Collision detected with an obstacle! Recalculating path to avoid obstacle.');
+                q_now = self.model.getpos();
                 % Recalculate path segments to avoid obstacle
-                [segment1, segment2] = recalculatePath(self, q_current, T_target, numSteps, x_min, x_max, y_min, y_max, z_min, z_max);
-                
-                % Animate each segment
-                for j = 1:size(segment1, 1)
-                    self.model.animate(segment1(j, :));
-                    pause(0.05);
-                end
-                for j = 1:size(segment2, 1)
-                    self.model.animate(segment2(j, :));
-                    pause(0.05);
-                end
+                recalculatePath(self, q_now, T_target, numSteps, x_min_obstacle, x_max_obstacle, ...
+                                y_min_obstacle, y_max_obstacle, z_min_obstacle, z_max_obstacle);
+                return; % Exit the loop after animating the segments
+            end
+
+            % Check for collision with the table
+            if current_position(1) >= x_min_table && current_position(1) <= x_max_table && ...
+               current_position(2) >= y_min_table && current_position(2) <= y_max_table && ...
+               current_position(3) >= z_min_table && current_position(3) <= z_max_table
+                warning('Collision detected with the table! Adjusting trajectory.');
+                q_now = self.model.getpos();
+                % Handle collision (similar to previous obstacle)
+                recalculatePath(self, q_now, T_target, numSteps, x_min_table, x_max_table, ...
+                                y_min_table, y_max_table, z_table_height, z_table_height + 1); % Assuming height of table + 1
                 return; % Exit the loop after animating the segments
             end
 
@@ -160,24 +94,77 @@ function moveToTarget(self, targetPosition)
     end
 end
 
-function [qMatrix_segment1, qMatrix_segment2] = recalculatePath(self, q_start, T_target, numSteps, x_min, x_max, y_min, y_max, z_min, z_max)
+function recalculatePath(self, q_start, T_target, numSteps, x_min, x_max, y_min, y_max, z_min, z_max)
     % Define the intermediate waypoint
-    waypoint = transl(1.138, -0.394, 1.1);
+    waypoint1 = transl(1.138, -0.394, 1.1);
+    waypoint2 = transl(0.729, -0.714, 1.1);
+    % waypoint3 = transl(0.467, -0.749, 1.1);
 
     % Calculate inverse kinematics to get joint values for the waypoint
-    q_waypoint = self.model.ikine(waypoint, 'mask', [1, 1, 1, 0, 0, 0]);
-    
+    q_waypoint1 = self.model.ikine(waypoint1, 'mask', [1, 1, 1, 0, 0, 0]);
+    qMatrix_segment1 = jtraj(q_start, q_waypoint1, numSteps/2);
 
-    % Create two-segment paths: q_start -> q_waypoint and q_waypoint -> q_goal
-    qMatrix_segment1 = jtraj(q_start, q_waypoint, numSteps);
+    q_waypoint2 = self.model.ikine(waypoint2, 'mask', [1, 1, 1, 0, 0, 0]);
+    qMatrix_segment2 = jtraj(q_waypoint1, q_waypoint2, numSteps/2);
+
     q_goal = self.model.ikine(T_target, 'mask', [1, 1, 1, 0, 0, 0]);
-    qMatrix_segment2 = jtraj(q_waypoint, q_goal, numSteps);
+    delta2 = q_goal(1) - q_waypoint2(1);
+    if abs(delta2) > pi
+        if delta2 > 0
+            q_goal(1) = q_goal(1) - 2*pi;
+        else
+            q_goal(1) = q_goal(1) + 2*pi;
+        end
+    end
+    qMatrix_segment3 = jtraj(q_waypoint2, q_goal, numSteps/2);
+
+    % Animate each segment
+    for j = 1:size(qMatrix_segment1, 1)
+        self.model.animate(qMatrix_segment1(j, :));
+        pause(0.05);
+    end
+    for j = 1:size(qMatrix_segment2, 1)
+        self.model.animate(qMatrix_segment2(j, :));
+        pause(0.05);
+    end
+    for j = 1:size(qMatrix_segment3, 1)
+        self.model.animate(qMatrix_segment3(j, :));
+        pause(0.05);
+    end
 end
 
-
-
-
-
+%% Rotate the link by a given angle (in radians)
+function rotateLink(self, linkIndex, angle, numSteps)
+            % Validate link index
+            if linkIndex < 1 || linkIndex > 6
+                error('Link index must be between 1 and 6.');
+            end
+            
+            % Get the current joint angles
+            q_current = self.model.getpos();
+            
+            % Calculate the target angle for the specified link
+            target_angle = q_current(linkIndex) + angle;
+            
+            % Ensure the target angle remains within joint limits
+            target_angle = mod(target_angle, 2 * pi); % Wrap the angle to [0, 2*pi]
+            if target_angle > pi
+                target_angle = target_angle - 2 * pi; % Keep it in the range [-pi, pi]
+            end
+            
+            % Interpolate between the current angle and the target angle
+            angles = linspace(q_current(linkIndex), target_angle, numSteps);
+            
+            % Animate the movement of the robot in steps
+            for i = 1:numSteps
+                % Update the specified joint angle
+                q_current(linkIndex) = angles(i);
+                
+                % Animate the current configuration
+                self.model.animate(q_current);
+                pause(0.05); % Adjust pause duration as needed
+            end
+        end
 %% CreateModel
         function CreateModel(self)       
             link(1) = Link('d', 0.3, 'a', 0, 'alpha', pi/2, 'qlim', deg2rad([-360 360]), 'offset', 0);

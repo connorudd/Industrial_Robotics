@@ -344,9 +344,9 @@ classdef environment
         
             % Desired position of the table
               desiredPositions = [
-                0.3, -0.5, 1.0
-                0.5, -0.6, 1.0
-                0.7, -0.5, 1.0
+                0.3, -0.5, 0.98
+                0.5, -0.6, 0.98
+                0.7, -0.5, 0.98
                 ];
               
             for i = 1:size(desiredPositions, 1)
