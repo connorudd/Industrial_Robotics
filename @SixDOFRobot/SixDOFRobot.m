@@ -134,37 +134,80 @@ function recalculatePath(self, q_start, T_target, numSteps, x_min, x_max, y_min,
 end
 
 %% Rotate the link by a given angle (in radians)
-function rotateLink(self, linkIndex, angle, numSteps)
-            % Validate link index
-            if linkIndex < 1 || linkIndex > 6
-                error('Link index must be between 1 and 6.');
+function rotateLink(self, linkIndex, angle, numSteps, environment)
+    persistent bowlHandle;
+    persistent cakeHandle;
+    % Validate link index
+    if linkIndex < 1 || linkIndex > 6
+        error('Link index must be between 1 and 6.');
+    end
+
+    % Get the current joint angles
+    q_current = self.model.getpos();
+
+    % Calculate the target angle for the specified link
+    target_angle = q_current(linkIndex) + angle;
+
+    % Ensure the target angle remains within joint limits
+    target_angle = mod(target_angle, 2 * pi); % Wrap the angle to [0, 2*pi]
+    if target_angle > pi
+        target_angle = target_angle - 2 * pi; % Keep it in the range [-pi, pi]
+    end
+
+    % Interpolate between the current angle and the target angle
+    angles = linspace(q_current(linkIndex), target_angle, numSteps);
+
+    % Animate the movement of the robot in steps
+    for i = 1:numSteps
+        % Update the specified joint angle
+        q_current(linkIndex) = angles(i);
+
+        % Animate the current configuration
+        self.model.animate(q_current);
+
+        % Check if link 5 is rotating to reposition the bowl
+        if linkIndex == 5 && angle < 0
+            % Get the current end-effector position
+            T_current = self.model.fkine(q_current);
+            bowlPosition = T_current.t';
+
+              % Delete previous bowl if it exists
+            if ~isempty(bowlHandle) && isvalid(bowlHandle)
+                delete(bowlHandle);
             end
-            
-            % Get the current joint angles
-            q_current = self.model.getpos();
-            
-            % Calculate the target angle for the specified link
-            target_angle = q_current(linkIndex) + angle;
-            
-            % Ensure the target angle remains within joint limits
-            target_angle = mod(target_angle, 2 * pi); % Wrap the angle to [0, 2*pi]
-            if target_angle > pi
-                target_angle = target_angle - 2 * pi; % Keep it in the range [-pi, pi]
+
+            % Add updated bowl position and store its handle
+            bowlHandle = environment.addBowl(2, bowlPosition);
+            if i == numSteps
+                    if ~isempty(bowlHandle) && isvalid(bowlHandle)
+                delete(bowlHandle);
+                    end
             end
-            
-            % Interpolate between the current angle and the target angle
-            angles = linspace(q_current(linkIndex), target_angle, numSteps);
-            
-            % Animate the movement of the robot in steps
-            for i = 1:numSteps
-                % Update the specified joint angle
-                q_current(linkIndex) = angles(i);
-                
-                % Animate the current configuration
-                self.model.animate(q_current);
-                pause(0.05); % Adjust pause duration as needed
-            end
+
         end
+        if linkIndex == 5 && angle > 0
+            % Get the current end-effector position
+            T_current = self.model.fkine(q_current);
+            cakePosition = T_current.t';
+
+              % Delete previous bowl if it exists
+            if ~isempty(cakeHandle) && isvalid(cakeHandle)
+                delete(cakeHandle);
+            end
+
+            % Add updated bowl position and store its handle
+            cakeHandle = environment.addCake(0.1, cakePosition);
+            if i == numSteps
+                    if ~isempty(cakeHandle) && isvalid(cakeHandle)
+                        delete(cakeHandle);
+                    end
+            end
+
+        end
+        pause(0.05); % Adjust pause duration as needed
+    end
+end
+
 %% CreateModel
         function CreateModel(self)       
             link(1) = Link('d', 0.3, 'a', 0, 'alpha', pi/2, 'qlim', deg2rad([-360 360]), 'offset', 0);
@@ -173,7 +216,6 @@ function rotateLink(self, linkIndex, angle, numSteps)
             link(4) = Link('d', -0.2, 'a', 0, 'alpha', 0, 'qlim', deg2rad([-360 360]), 'offset', 0);
             link(5) = Link('d', 0, 'a', 0, 'alpha', pi/2, 'qlim', deg2rad([-360 360]), 'offset', 0);
             link(6) = Link('d', -0.25, 'a', 0, 'alpha', 0, 'qlim', deg2rad([-360 360]), 'offset', 0);
-
 
             self.model = SerialLink(link,'name',self.name);
 

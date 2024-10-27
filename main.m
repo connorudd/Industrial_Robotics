@@ -6,6 +6,8 @@ classdef main
             % 
             % % Plot the environment with the robots
             env.plotEnvironment(); % Call the method to plot the environment
+            bowlPositions = [0, 0, 1.05];
+            bowlHandle = env.addBowl(2, bowlPositions);
 
             % Create and plot the first robot (Dobot)
             robot1 = Dobot();  % Create an instance of the Dobot robot
@@ -19,9 +21,14 @@ classdef main
              % axis equal;
             view(3);
             %% moving 6DOF
-              % robot2.model.teach(); 
-           
-            bowl % % plate #1 location 
+            % robot2.model.teach(); 
+            main.move6DOF(robot2, env, bowlHandle);
+            pause;
+
+        end
+        function move6DOF(robot2, env, bowlHandle)
+
+            % plate #1 location 
             robot2.moveToTarget([0.3, -0.5, 1.01]);
             % bowl
             robot2.moveToTarget([0, 0, 1.05]);
@@ -34,17 +41,22 @@ classdef main
             % bowl
             robot2.moveToTarget([0, 0, 1.05]);
             % mix ingredients
-            robot2.rotateLink(6, pi, 150);
-            % oven location 
-            robot2.rotateLink(5, pi, 150);
+            robot2.rotateLink(6, pi, 50, env);
+            % delete previous bowl 
+            if ~isempty(bowlHandle) && isvalid(bowlHandle)
+                delete(bowlHandle);
+            end
+            % oven location and bowl plotting
+            robot2.rotateLink(5, -2/3*pi, 50, env);
             pause(1);
-            % cake
-            robot2.moveToTarget([0, 0, 1.05]);
-
+            % back to cake and cake plotting
+            robot2.rotateLink(5, 2/3*pi, 50, env);
+            % cake on table 
+            cakePositions = [0, 0, 1];
+            cakeHandle = env.addCake(0.1, cakePositions);
             
-            pause;
-
-        end
+            robot2.moveToTarget([0.3, -0.5, 1.01]);
+        end 
     end
 end
 
