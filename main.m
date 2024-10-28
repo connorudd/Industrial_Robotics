@@ -86,31 +86,32 @@ classdef main
         function move6DOF(robot2, env, bowlHandle, estop)
             % Series of movements with E-stop checks
             targets = [
-                0.3, -0.5, 1.01;
-                0, 0, 1.05;
-                0.55, -0.5, 1.01;
-                0, 0, 1.05;
-                0.7, -0.5, 1.01;
-                0, 0, 1.05
+                0.3, -0.5, 1.01; %plate #1
+                0, 0, 1.05;     % bowl
+                0.55, -0.5, 1.01;   %plate #2
+                0, 0, 1.05;         %bowl
+                0.7, -0.5, 1.01;    %plate #3
+                0, 0, 1.05          %bowl
             ];
 
             for i = 1:size(targets, 1)
                 robot2.moveToTarget(targets(i, :), estop);
             end
 
-            % Mixing and rotating tasks with E-stop check
+            % Mixing 
             robot2.rotateLink(6, pi, 50, env, estop);
 
             % Delete previous bowl and continue tasks
             if ~isempty(bowlHandle) && isvalid(bowlHandle)
                 delete(bowlHandle);
             end
-
+            % Move inot oven (add bowls)
             robot2.rotateLink(5, -2/3 * pi, 50, env, estop);
             pause(1);
+            % Move out of oven (add cakes)
             robot2.rotateLink(5, 2/3 * pi, 50, env, estop);
 
-            % Add cake to the environment
+            % Add final cake to the environment
             cakePositions = [0, 0, 1];
             env.addCake(0.1, cakePositions);
             robot2.moveToTarget([0.3, -0.5, 1.01], estop);
