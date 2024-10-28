@@ -16,7 +16,7 @@ classdef SixDOFRobot < RobotBaseClass
             self.homeQ = self.RealQToModelQ(self.defaultRealQ);
             self.PlotAndColourRobot();
         end
-function moveToTarget(self, targetPosition)
+function moveToTarget(self, targetPosition, estop)
     % Create a transformation matrix for the target position
     T_target = transl(targetPosition(1), targetPosition(2), targetPosition(3));
 
@@ -71,20 +71,25 @@ function moveToTarget(self, targetPosition)
                 q_now = self.model.getpos();
                 % Recalculate path segments to avoid obstacle
                 recalculatePath(self, q_now, T_target, numSteps, x_min_obstacle, x_max_obstacle, ...
-                                y_min_obstacle, y_max_obstacle, z_min_obstacle, z_max_obstacle);
+                                y_min_obstacle, y_max_obstacle, z_min_obstacle, z_max_obstacle, estop);
                 return; % Exit the loop after animating the segments
             end
 
             % Check for collision with the table
             if current_position(1) >= x_min_table && current_position(1) <= x_max_table && ...
                current_position(2) >= y_min_table && current_position(2) <= y_max_table && ...
-               current_position(3) >= z_min_table && current_position(3) <= z_max_table
+               current_position(3) >= z_min_table && current_position(3) <= z_min_table
                 warning('Collision detected with the table! Adjusting trajectory.');
                 q_now = self.model.getpos();
                 % Handle collision (similar to previous obstacle)
                 recalculatePath(self, q_now, T_target, numSteps, x_min_table, x_max_table, ...
-                                y_min_table, y_max_table, z_table_height, z_table_height + 1); % Assuming height of table + 1
+                                y_min_table, y_max_table,z_min_table, z_min_table, estop); % Assuming height of table + 1
                 return; % Exit the loop after animating the segments
+            end
+
+            % Pause movement if E-stop is active
+            while estop.IsStopped
+                pause(0.1); % Wait until E-stop is deactivated
             end
 
             % If no collision, animate the movement
@@ -94,7 +99,7 @@ function moveToTarget(self, targetPosition)
     end
 end
 
-function recalculatePath(self, q_start, T_target, numSteps, x_min, x_max, y_min, y_max, z_min, z_max)
+function recalculatePath(self, q_start, T_target, numSteps, x_min, x_max, y_min, y_max, z_min, z_max, estop)
     % Define the intermediate waypoint
     waypoint1 = transl(1.138, -0.394, 1.1);
     waypoint2 = transl(0.729, -0.714, 1.1);
@@ -120,21 +125,33 @@ function recalculatePath(self, q_start, T_target, numSteps, x_min, x_max, y_min,
 
     % Animate each segment
     for j = 1:size(qMatrix_segment1, 1)
+         % Pause movement if E-stop is active
+            while estop.IsStopped
+                pause(0.1); % Wait until E-stop is deactivated
+            end
         self.model.animate(qMatrix_segment1(j, :));
         pause(0.05);
     end
     for j = 1:size(qMatrix_segment2, 1)
+         % Pause movement if E-stop is active
+            while estop.IsStopped
+                pause(0.1); % Wait until E-stop is deactivated
+            end
         self.model.animate(qMatrix_segment2(j, :));
         pause(0.05);
     end
     for j = 1:size(qMatrix_segment3, 1)
+         % Pause movement if E-stop is active
+            while estop.IsStopped
+                pause(0.1); % Wait until E-stop is deactivated
+            end
         self.model.animate(qMatrix_segment3(j, :));
         pause(0.05);
     end
 end
 
 %% Rotate the link by a given angle (in radians)
-function rotateLink(self, linkIndex, angle, numSteps, environment)
+function rotateLink(self, linkIndex, angle, numSteps, environment, estop)
     persistent bowlHandle;
     persistent cakeHandle;
     % Validate link index
@@ -161,7 +178,10 @@ function rotateLink(self, linkIndex, angle, numSteps, environment)
     for i = 1:numSteps
         % Update the specified joint angle
         q_current(linkIndex) = angles(i);
-
+        % Pause movement if E-stop is active
+        while estop.IsStopped
+            pause(0.1); % Wait until E-stop is deactivated
+        end
         % Animate the current configuration
         self.model.animate(q_current);
 

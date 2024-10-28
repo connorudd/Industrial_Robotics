@@ -1,62 +1,120 @@
+% classdef main
+%     methods(Static)
+%         function plotEnvironment()
+%             % Create an instance of the Environment class
+%             env = environment(); % Create the environment instance
+%             % 
+%             % % Plot the environment with the robots
+%             env.plotEnvironment(); % Call the method to plot the environment
+%             bowlPositions = [0, 0, 1.05];
+%             bowlHandle = env.addBowl(2, bowlPositions);
+% 
+%             % Create and plot the first robot (Dobot)
+%             robot1 = Dobot();  % Create an instance of the Dobot robot
+% 
+%             % Create and plot the second robot (6-DOF)
+%             %T_robot2 = transl(2, 0, 0);  % Translate the second robot along the X-axis
+%             robot2 = SixDOFRobot();
+% 
+%             %% robot view 
+%              axis([-2 2 -2 2 0 3]); 
+%              % axis equal;
+%             view(3);
+%             %% moving 6DOF
+%             % robot2.model.teach(); 
+%             main.move6DOF(robot2, env, bowlHandle);
+%             pause;
+% 
+%         end
+%         function move6DOF(robot2, env, bowlHandle)
+% 
+%             % plate #1 location 
+%             robot2.moveToTarget([0.3, -0.5, 1.01]);
+%             % bowl
+%             robot2.moveToTarget([0, 0, 1.05]);
+%             % plate 2
+%             robot2.moveToTarget([0.55, -0.5, 1.01]);
+%             % bowl
+%             robot2.moveToTarget([0, 0, 1.05]);
+%             % plate 3
+%             robot2.moveToTarget([0.7, -0.5, 1.01]);
+%             % bowl
+%             robot2.moveToTarget([0, 0, 1.05]);
+%             % mix ingredients
+%             robot2.rotateLink(6, pi, 50, env);
+%             % delete previous bowl 
+%             if ~isempty(bowlHandle) && isvalid(bowlHandle)
+%                 delete(bowlHandle);
+%             end
+%             % oven location and bowl plotting
+%             robot2.rotateLink(5, -2/3*pi, 50, env);
+%             pause(1);
+%             % back to cake and cake plotting
+%             robot2.rotateLink(5, 2/3*pi, 50, env);
+%             % cake on table 
+%             cakePositions = [0, 0, 1];
+%             cakeHandle = env.addCake(0.1, cakePositions);
+% 
+%             robot2.moveToTarget([0.3, -0.5, 1.01]);
+%         end 
+%     end
+% end
+
 classdef main
     methods(Static)
         function plotEnvironment()
-            % Create an instance of the Environment class
+            % Initialize environment and robots
             env = environment(); % Create the environment instance
-            % 
-            % % Plot the environment with the robots
-            env.plotEnvironment(); % Call the method to plot the environment
+            env.plotEnvironment(); % Plot the environment
             bowlPositions = [0, 0, 1.05];
             bowlHandle = env.addBowl(2, bowlPositions);
+            robot1 = Dobot();  % Initialize Dobot robot
+            robot2 = SixDOFRobot(); % Initialize 6-DOF robot
 
-            % Create and plot the first robot (Dobot)
-            robot1 = Dobot();  % Create an instance of the Dobot robot
-
-            % Create and plot the second robot (6-DOF)
-            %T_robot2 = transl(2, 0, 0);  % Translate the second robot along the X-axis
-            robot2 = SixDOFRobot();
-
-            %% robot view 
-             axis([-2 2 -2 2 0 3]); 
-             % axis equal;
+            % Set up the view
+            axis([-2 2 -2 2 0 3]);
             view(3);
-            %% moving 6DOF
-            % robot2.model.teach(); 
-            main.move6DOF(robot2, env, bowlHandle);
+            
+            % Create the E-stop button within the existing figure
+            estop = EStop(gcf); % Add the E-stop button to the environment figure
+            
+            % Begin moving the 6DOF robot with E-stop control
+            main.move6DOF(robot2, env, bowlHandle, estop);
             pause;
-
         end
-        function move6DOF(robot2, env, bowlHandle)
+        
+        function move6DOF(robot2, env, bowlHandle, estop)
+            % Series of movements with E-stop checks
+            targets = [
+                0.3, -0.5, 1.01;
+                0, 0, 1.05;
+                0.55, -0.5, 1.01;
+                0, 0, 1.05;
+                0.7, -0.5, 1.01;
+                0, 0, 1.05
+            ];
 
-            % plate #1 location 
-            robot2.moveToTarget([0.3, -0.5, 1.01]);
-            % bowl
-            robot2.moveToTarget([0, 0, 1.05]);
-            % plate 2
-            robot2.moveToTarget([0.55, -0.5, 1.01]);
-            % bowl
-            robot2.moveToTarget([0, 0, 1.05]);
-            % plate 3
-            robot2.moveToTarget([0.7, -0.5, 1.01]);
-            % bowl
-            robot2.moveToTarget([0, 0, 1.05]);
-            % mix ingredients
-            robot2.rotateLink(6, pi, 50, env);
-            % delete previous bowl 
+            for i = 1:size(targets, 1)
+                robot2.moveToTarget(targets(i, :), estop);
+            end
+
+            % Mixing and rotating tasks with E-stop check
+            robot2.rotateLink(6, pi, 50, env, estop);
+
+            % Delete previous bowl and continue tasks
             if ~isempty(bowlHandle) && isvalid(bowlHandle)
                 delete(bowlHandle);
             end
-            % oven location and bowl plotting
-            robot2.rotateLink(5, -2/3*pi, 50, env);
-            pause(1);
-            % back to cake and cake plotting
-            robot2.rotateLink(5, 2/3*pi, 50, env);
-            % cake on table 
-            cakePositions = [0, 0, 1];
-            cakeHandle = env.addCake(0.1, cakePositions);
 
-            robot2.moveToTarget([0.3, -0.5, 1.01]);
-        end 
+            robot2.rotateLink(5, -2/3 * pi, 50, env, estop);
+            pause(1);
+            robot2.rotateLink(5, 2/3 * pi, 50, env, estop);
+
+            % Add cake to the environment
+            cakePositions = [0, 0, 1];
+            env.addCake(0.1, cakePositions);
+            robot2.moveToTarget([0.3, -0.5, 1.01], estop);
+        end
     end
 end
 

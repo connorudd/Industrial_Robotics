@@ -3,7 +3,7 @@ classdef environment
         function plotEnvironment(obj)
             close all;
             % Set up the environment plot
-            figure;
+            fig = figure;
             hold on;
             title('Bakery Environment');
             xlabel('X');
@@ -11,6 +11,9 @@ classdef environment
             zlabel('Z');
             view(3);
             grid on;
+
+            % Add the E-stop button
+            estop = EStop(fig); % Create the E-stop button on the environment figure
 
             % Create and plot the first robot (Dobot)
             % robot1 = Dobot();  % Create an instance of the Dobot robot
