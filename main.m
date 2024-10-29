@@ -80,6 +80,8 @@ classdef main
             
             % Begin moving the 6DOF robot with E-stop control
             main.move6DOF(robot2, env, bowlHandle, estop);
+            % gui
+            % main.createRobotControlGUI(robot2);
             pause;
         end
         
@@ -116,7 +118,42 @@ classdef main
             env.addCake(0.1, cakePositions);
             robot2.moveToTarget([0.3, -0.5, 1.01], estop);
         end
+      function createRobotControlGUI(robot)
+            % Create figure for the GUI
+            guiFig = figure('Name', 'Robot Position Control', 'NumberTitle', 'off', 'Position', [100, 100, 300, 400]);
+            
+            % Create X slider
+            uicontrol('Style', 'text', 'Position', [20, 350, 60, 20], 'String', 'X Position');
+            xSlider = uicontrol('Style', 'slider', 'Position', [100, 350, 150, 20], 'Min', -1, 'Max', 1, 'Value', 0);
+            addlistener(xSlider, 'Value', 'PostSet', @(src, evt) updatePosition(robot, xSlider, ySlider, zSlider));
+            
+            % Create Y slider
+            uicontrol('Style', 'text', 'Position', [20, 300, 60, 20], 'String', 'Y Position');
+            ySlider = uicontrol('Style', 'slider', 'Position', [100, 300, 150, 20], 'Min', -1, 'Max', 1, 'Value', 0);
+            addlistener(ySlider, 'Value', 'PostSet', @(src, evt) updatePosition(robot, xSlider, ySlider, zSlider));
+            
+            % Create Z slider
+            uicontrol('Style', 'text', 'Position', [20, 250, 60, 20], 'String', 'Z Position');
+            zSlider = uicontrol('Style', 'slider', 'Position', [100, 250, 150, 20], 'Min', 0, 'Max', 2, 'Value', 1);
+            addlistener(zSlider, 'Value', 'PostSet', @(src, evt) updatePosition(robot, xSlider, ySlider, zSlider));
+        end
+        
+        % Update position callback function
+        function updatePosition(robot, xSlider, ySlider, zSlider)
+            % Retrieve slider values
+            xVal = get(xSlider, 'Value');
+            yVal = get(ySlider, 'Value');
+            zVal = get(zSlider, 'Value');
+            
+            % Call moveToTarget with the new position
+            targetPosition = [xVal, yVal, zVal];
+            estop = []; % Assuming E-stop implementation; replace as needed
+            robot.moveToTarget(targetPosition, estop);
+        end
+
     end
+
+
 end
 
 % 
