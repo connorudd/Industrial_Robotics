@@ -16,7 +16,7 @@ classdef SixDOFRobot < RobotBaseClass
             self.homeQ = self.RealQToModelQ(self.defaultRealQ);
             self.PlotAndColourRobot();
         end
-function moveToTarget(self, targetPosition, estop)
+function moveToTarget(self, targetPosition, estop, hard_estop)
     % Create a transformation matrix for the target position
     T_target = transl(targetPosition(1), targetPosition(2), targetPosition(3));
 
@@ -70,7 +70,7 @@ function moveToTarget(self, targetPosition, estop)
                 warning('Collision detected with an obstacle! Recalculating path to avoid obstacle.');
                 q_now = self.model.getpos();
                 % Recalculate path segments to avoid oven
-                recalculatePath(self, q_now, T_target, numSteps, estop);
+                recalculatePath(self, q_now, T_target, numSteps, estop, hard_estop);
                 return; 
             end
 
@@ -81,12 +81,12 @@ function moveToTarget(self, targetPosition, estop)
                 warning('Collision detected with the table! Adjusting trajectory.');
                 q_now = self.model.getpos();
                 % Handle collision 
-                recalculatePath(self, q_now, T_target, numSteps, estop);
+                recalculatePath(self, q_now, T_target, numSteps, estop, hard_estop);
                 return; 
             end
 
             % Pause movement if E-stop is active
-            while estop.IsStopped
+            while estop.IsStopped || hard_estop.IsStopped
                 pause(0.1); % Wait until E-stop is deactivated
             end
 
@@ -97,7 +97,7 @@ function moveToTarget(self, targetPosition, estop)
     end
 end
 
-function recalculatePath(self, q_start, T_target, numSteps, estop)
+function recalculatePath(self, q_start, T_target, numSteps, estop, hard_estop)
     % Define the intermediate waypoint
     waypoint1 = transl(1.138, -0.394, 1.1);
     waypoint2 = transl(0.729, -0.714, 1.1);
@@ -124,7 +124,7 @@ function recalculatePath(self, q_start, T_target, numSteps, estop)
     % Animate each segment
     for j = 1:size(qMatrix_segment1, 1)
          % Pause movement if E-stop is active
-            while estop.IsStopped
+            while estop.IsStopped || hard_estop.IsStopped
                 pause(0.1); % Wait until E-stop is deactivated
             end
         self.model.animate(qMatrix_segment1(j, :));
@@ -132,7 +132,7 @@ function recalculatePath(self, q_start, T_target, numSteps, estop)
     end
     for j = 1:size(qMatrix_segment2, 1)
          % Pause movement if E-stop is active
-            while estop.IsStopped
+            while estop.IsStopped || hard_estop.IsStopped
                 pause(0.1); % Wait until E-stop is deactivated
             end
         self.model.animate(qMatrix_segment2(j, :));
@@ -140,7 +140,7 @@ function recalculatePath(self, q_start, T_target, numSteps, estop)
     end
     for j = 1:size(qMatrix_segment3, 1)
          % Pause movement if E-stop is active
-            while estop.IsStopped
+            while estop.IsStopped || hard_estop.IsStopped
                 pause(0.1); % Wait until E-stop is deactivated
             end
         self.model.animate(qMatrix_segment3(j, :));
@@ -149,7 +149,7 @@ function recalculatePath(self, q_start, T_target, numSteps, estop)
 end
 
 %% Rotate the link by a given angle (in radians)
-function rotateLink(self, linkIndex, angle, numSteps, environment, estop)
+function rotateLink(self, linkIndex, angle, numSteps, environment, estop, hard_estop)
     persistent bowlHandle;
     persistent cakeHandle;
     % Validate link index
@@ -177,7 +177,7 @@ function rotateLink(self, linkIndex, angle, numSteps, environment, estop)
         % Update the specified joint angle
         q_current(linkIndex) = angles(i);
         % Pause movement if E-stop is active
-        while estop.IsStopped
+        while estop.IsStopped || hard_estop.IsStopped
             pause(0.1); % Wait until E-stop is deactivated
         end
         % Animate the current configuration
@@ -226,7 +226,7 @@ function rotateLink(self, linkIndex, angle, numSteps, environment, estop)
     end
 end
 
- function moveToTargetGUI(self, targetPosition, estop)
+ function moveToTargetGUI(self, targetPosition, estop, hard_estop)
     % Create a transformation matrix for the target position
     T_target = transl(targetPosition(1), targetPosition(2), targetPosition(3));
 
@@ -259,7 +259,7 @@ end
         % Check for collision and animate the robot movement
         for i = 1:numSteps
             % Pause movement if E-stop is active
-            while estop.IsStopped
+            while estop.IsStopped || hard_estop.IsStopped
                 pause(0.1); % Wait until E-stop is deactivated
             end
             % If no collision, animate the movement
