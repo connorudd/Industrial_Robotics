@@ -7,6 +7,10 @@ classdef main
             env.plotEnvironment(); % Plot the environment
             bowlPositions = [0, 0, 1.05];
             bowlHandle = env.addBowl(2, bowlPositions);
+            shapeHandle1 = env.addShape1(0.0025);
+            shapeHandle2 = env.addShape2(0.0025);
+            shapeHandle3 = env.addShape3(0.0025);
+
             robot1 = Dobot();  % Initialize Dobot robot
             robot2 = SixDOFRobot(); % Initialize 6-DOF robot
 
@@ -18,19 +22,23 @@ classdef main
             estop = EStop(gcf); % Add the E-stop button to the environment figure
             
             % Begin moving the 6DOF robot with E-stop control
-            % main.move6DOF(robot2, env, bowlHandle, estop);
+            main.move6DOF(robot2, env, bowlHandle, estop);
+            
+            main.deleteShapes(shapeHandle3, shapeHandle2, shapeHandle1);
+            % delete shape handles
+            dobot_move.move_dobot(robot1, estop);
+
+
             % gui
-            main.createRobotJoggingGUI(robot2, estop);
-            % del
-            % dobot_move.move_dobot(robot1, estop);
+            % main.createRobotJoggingGUI(robot2, estop);
             pause;
         end
         
         function move6DOF(robot2, env, bowlHandle, estop)
             % Series of movements with E-stop checks
             targets = [
-                0.3, -0.5, 1.01; %plate #1
-                0, 0, 1.05;     % bowl
+                0.3, -0.5, 1.01;    %plate #1
+                0, 0, 1.05;         %bowl
                 0.55, -0.5, 1.01;   %plate #2
                 0, 0, 1.05;         %bowl
                 0.7, -0.5, 1.01;    %plate #3
@@ -59,6 +67,19 @@ classdef main
             env.addCake(0.1, cakePositions);
             robot2.moveToTarget([0.3, -0.5, 1.01], estop);
         end
+
+        function deleteShapes (shapeHandle3, shapeHandle2, shapeHandle1)
+             if ~isempty(shapeHandle3) && isvalid(shapeHandle3)
+                delete(shapeHandle3);
+             end
+             if ~isempty(shapeHandle2) && isvalid(shapeHandle2)
+                delete(shapeHandle2);
+             end 
+            if ~isempty(shapeHandle1) && isvalid(shapeHandle1)
+                delete(shapeHandle1);
+            end
+        end
+
 
         function createRobotJoggingGUI(robot, estop)
             % Create a figure for jogging the robot
@@ -102,40 +123,3 @@ classdef main
         end
     end
 end
-    %  function createRobotControlGUI(robot)
-    %     % Create figure for the GUI
-    %     guiFig = figure('Name', 'Robot Position Control', 'NumberTitle', 'off', 'Position', [100, 100, 300, 400]);
-    % 
-    %     % Create X slider
-    %     uicontrol('Style', 'text', 'Position', [20, 350, 60, 20], 'String', 'X Position');
-    %     xSlider = uicontrol('Style', 'slider', 'Position', [100, 350, 150, 20], 'Min', 0, 'Max', 1.4, 'Value', 0);
-    % 
-    %     % Create Y slider
-    %     uicontrol('Style', 'text', 'Position', [20, 300, 60, 20], 'String', 'Y Position');
-    %     ySlider = uicontrol('Style', 'slider', 'Position', [100, 300, 150, 20], 'Min', -0.7, 'Max', 0.7, 'Value', 0);
-    % 
-    %     % Create Z slider
-    %     uicontrol('Style', 'text', 'Position', [20, 250, 60, 20], 'String', 'Z Position');
-    %     zSlider = uicontrol('Style', 'slider', 'Position', [100, 250, 150, 20], 'Min', 1, 'Max', 1.5, 'Value', 1);
-    % 
-    %     % Set listeners after creating all sliders
-    %     addlistener(xSlider, 'Value', 'PostSet', @(src, evt) main.updatePosition(robot, xSlider, ySlider, zSlider));
-    %     addlistener(ySlider, 'Value', 'PostSet', @(src, evt) main.updatePosition(robot, xSlider, ySlider, zSlider));
-    %     addlistener(zSlider, 'Value', 'PostSet', @(src, evt) main.updatePosition(robot, xSlider, ySlider, zSlider));
-    % end
-    % 
-    % 
-    %     % Update position callback function
-    %     function updatePosition(robot, xSlider, ySlider, zSlider)
-    %         % Retrieve slider values
-    %         xVal = get(xSlider, 'Value');
-    %         yVal = get(ySlider, 'Value');
-    %         zVal = get(zSlider, 'Value');
-    % 
-    %         % Call moveToTarget with the new position
-    %         targetPosition = [xVal, yVal, zVal];
-    % 
-    %         robot.moveRobotGUI(targetPosition, 2);
-    %     end
-
-    

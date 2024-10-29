@@ -14,6 +14,14 @@ classdef environment
 
             % Add the E-stop button
             estop = EStop(fig); % Create the E-stop button on the environment figure
+
+            % Create and plot the first robot (Dobot)
+            % robot1 = Dobot();  % Create an instance of the Dobot robot
+            % 
+            % 
+            % Create and plot the second robot (6-DOF)
+            % T_robot2 = transl(2, 0, 0);  % Translate the second robot along the X-axis
+            % robot2 = SixDOFRobot();
             
             % Add the fence PLY model
             obj.addFence(0.002);  % Add fence at position (1, 1, 1)
@@ -456,8 +464,8 @@ classdef environment
         
             % Rotation matrix (90 degrees around z-axis)
             R = [0  1  0;
-                 -1  0  0;
-                 0 0  1];
+                 % -1  0  0;
+                 % 0 0  1];
 
             % Scale the vertices
             v_scaled = v * scale;  % Scale the vertices by the given factor
