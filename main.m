@@ -59,8 +59,6 @@ classdef main
             env.addCake(0.1, cakePositions);
             robot2.moveToTarget([0.3, -0.5, 1.01], estop);
         end
-%     end 
-% end 
 
         function createRobotJoggingGUI(robot, estop)
             % Create a figure for jogging the robot
@@ -70,38 +68,27 @@ classdef main
             % Define buttons for jogging in x, y, z directions
             uicontrol('Style', 'pushbutton', 'String', 'Move +X', ...
                       'Position', [50, 150, 100, 30], ...
-                      'Callback', @(src, event) main.moveRobot(robot, [0.01, 0, 0], estop));
+                      'Callback', @(src, event) main.moveRobot(robot, [0.03, 0, 0], estop));
                   
             uicontrol('Style', 'pushbutton', 'String', 'Move -X', ...
                       'Position', [150, 150, 100, 30], ...
-                      'Callback', @(src, event) main.moveRobot(robot, [-0.01, 0, 0], estop));
+                      'Callback', @(src, event) main.moveRobot(robot, [-0.03, 0, 0], estop));
                   
             uicontrol('Style', 'pushbutton', 'String', 'Move +Y', ...
                       'Position', [50, 100, 100, 30], ...
-                      'Callback', @(src, event) main.moveRobot(robot, [0, 0.01, 0], estop));
+                      'Callback', @(src, event) main.moveRobot(robot, [0, 0.03, 0], estop));
                   
             uicontrol('Style', 'pushbutton', 'String', 'Move -Y', ...
                       'Position', [150, 100, 100, 30], ...
-                      'Callback', @(src, event) main.moveRobot(robot, [0, -0.01, 0], estop));
+                      'Callback', @(src, event) main.moveRobot(robot, [0, -0.03, 0], estop));
                   
             uicontrol('Style', 'pushbutton', 'String', 'Move +Z', ...
                       'Position', [50, 50, 100, 30], ...
-                      'Callback', @(src, event) main.moveRobot(robot, [0, 0, 0.01], estop));
+                      'Callback', @(src, event) main.moveRobot(robot, [0, 0, 0.03], estop));
                   
             uicontrol('Style', 'pushbutton', 'String', 'Move -Z', ...
                       'Position', [150, 50, 100, 30], ...
-                      'Callback', @(src, event) main.moveRobot(robot, [0, 0, -0.01], estop));
-            uicontrol('Style', 'pushbutton', 'String', 'Reset X', ...
-                      'Position', [250, 150, 100, 30], ...
-                      'Callback', @(src, event) main.moveRobot(robot, [0, 0, 0], estop));
-                  
-            uicontrol('Style', 'pushbutton', 'String', 'Reset Y', ...
-                      'Position', [250, 100, 100, 30], ...
-                      'Callback', @(src, event) main.moveRobot(robot, [0, 0, 0], estop));
-                  
-            uicontrol('Style', 'pushbutton', 'String', 'Reset Z', ...
-                      'Position', [250, 50, 100, 30], ...
-                      'Callback', @(src, event) main.moveRobot(robot, [0, 0, 0], estop));
+                      'Callback', @(src, event) main.moveRobot(robot, [0, 0, -0.03], estop));
         end
         
         function moveRobot(robot, offset, estop)
@@ -111,7 +98,7 @@ classdef main
             newPos = currentPos + offset;
 
             % Move the robot to the new position
-            robot.moveToTarget(newPos, estop);
+            robot.moveToTargetGUI(newPos, estop);
         end
     end
 end

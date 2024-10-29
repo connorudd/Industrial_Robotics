@@ -32,7 +32,7 @@ function moveToTarget(self, targetPosition, estop)
         % Define the number of steps for smooth animation
         numSteps = 150;
         
-        % Ensure shortest travel distance 
+        % Ensure shortest travel distance for joint 1 (300 = -60) 
         delta2 = q_sol(1) - q_current(1);
         if abs(delta2) > pi
             if delta2 > 0
@@ -45,7 +45,7 @@ function moveToTarget(self, targetPosition, estop)
         % Interpolate between the current and target joint angles
         qMatrix = jtraj(q_current, q_sol, numSteps);
 
-        % Define obstacle boundaries (for previous obstacles)
+        % Define oven boundaries
         x_min_obstacle = 0.15; x_max_obstacle = 0.35;
         y_min_obstacle = 0.2; y_max_obstacle = 0.8;
         z_min_obstacle = 0.95; z_max_obstacle = 2;
@@ -60,7 +60,7 @@ function moveToTarget(self, targetPosition, estop)
             % Get the transformation matrix for the current joint configuration
             T_current = self.model.fkine(qMatrix(i, :));
 
-            % Extract position from transformation matrix
+            % Extract end-effector position from transformation matrix
             current_position = T_current.t;
 
             % Check if the current position is within the oven
@@ -69,22 +69,22 @@ function moveToTarget(self, targetPosition, estop)
                current_position(3) >= z_min_obstacle && current_position(3) <= z_max_obstacle
                 warning('Collision detected with an obstacle! Recalculating path to avoid obstacle.');
                 q_now = self.model.getpos();
-                % Recalculate path segments to avoid obstacle
+                % Recalculate path segments to avoid oven
                 recalculatePath(self, q_now, T_target, numSteps, x_min_obstacle, x_max_obstacle, ...
                                 y_min_obstacle, y_max_obstacle, z_min_obstacle, z_max_obstacle, estop);
-                return; % Exit the loop after animating the segments
+                return; 
             end
 
             % Check for collision with the table
             if current_position(1) >= x_min_table && current_position(1) <= x_max_table && ...
                current_position(2) >= y_min_table && current_position(2) <= y_max_table && ...
-               current_position(3) >= z_min_table && current_position(3) <= z_min_table
+               current_position(3) >= z_min_table && current_position(3) <= z_max_table
                 warning('Collision detected with the table! Adjusting trajectory.');
                 q_now = self.model.getpos();
-                % Handle collision (similar to previous obstacle)
+                % Handle collision 
                 recalculatePath(self, q_now, T_target, numSteps, x_min_table, x_max_table, ...
-                                y_min_table, y_max_table,z_min_table, z_min_table, estop); % Assuming height of table + 1
-                return; % Exit the loop after animating the segments
+                                y_min_table, y_max_table,z_min_table, z_min_table, estop);
+                return; 
             end
 
             % Pause movement if E-stop is active
@@ -227,7 +227,7 @@ function rotateLink(self, linkIndex, angle, numSteps, environment, estop)
         pause(0.05); % Adjust pause duration as needed
     end
 end
- function moveToTargetGUI(obj, targetPosition, estop)
+ function moveToTargetGUI(self, targetPosition, estop)
     % Create a transformation matrix for the target position
     T_target = transl(targetPosition(1), targetPosition(2), targetPosition(3));
 
