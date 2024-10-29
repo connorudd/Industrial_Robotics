@@ -227,6 +227,48 @@ function rotateLink(self, linkIndex, angle, numSteps, environment, estop)
         pause(0.05); % Adjust pause duration as needed
     end
 end
+ function moveToTargetGUI(obj, targetPosition, estop)
+    % Create a transformation matrix for the target position
+    T_target = transl(targetPosition(1), targetPosition(2), targetPosition(3));
+
+    % Calculate the inverse kinematics to find joint angles
+    q_sol = self.model.ikine(T_target, 'mask', [1, 1, 1, 0, 0, 0]); % Mask to consider only position
+
+    if isempty(q_sol)
+        error('No solution found for the target position');
+    else
+        % Get the current joint angles
+        q_current = self.model.getpos();
+
+        % Define the number of steps for smooth animation
+        numSteps = 10;
+        
+        % Ensure shortest travel distance 
+        delta2 = q_sol(1) - q_current(1);
+        if abs(delta2) > pi
+            if delta2 > 0
+                q_sol(1) = q_sol(1) - 2 * pi;
+            else
+                q_sol(1) = q_sol(1) + 2 * pi;
+            end
+        end
+
+        % Interpolate between the current and target joint angles
+        qMatrix = jtraj(q_current, q_sol, numSteps);
+
+
+        % Check for collision and animate the robot movement
+        for i = 1:numSteps
+            % Pause movement if E-stop is active
+            while estop.IsStopped
+                pause(0.1); % Wait until E-stop is deactivated
+            end
+            % If no collision, animate the movement
+            self.model.animate(qMatrix(i, :));
+            pause(0.05);
+        end
+    end
+ end
 
 %% CreateModel
         function CreateModel(self)       

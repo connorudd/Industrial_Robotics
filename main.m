@@ -20,9 +20,9 @@ classdef main
             % Begin moving the 6DOF robot with E-stop control
             % main.move6DOF(robot2, env, bowlHandle, estop);
             % gui
-            % main.createRobotControlGUI(robot2);
+            main.createRobotJoggingGUI(robot2, estop);
             % del
-            dobot_move.move_dobot(robot1, estop);
+            % dobot_move.move_dobot(robot1, estop);
             pause;
         end
         
@@ -59,42 +59,96 @@ classdef main
             env.addCake(0.1, cakePositions);
             robot2.moveToTarget([0.3, -0.5, 1.01], estop);
         end
+%     end 
+% end 
 
+        function createRobotJoggingGUI(robot, estop)
+            % Create a figure for jogging the robot
+            jogFig = figure('Name', 'Robot Jogging Controls', 'NumberTitle', 'off', ...
+                            'Position', [100, 100, 300, 200]);
 
-      function createRobotControlGUI(robot)
-            % Create figure for the GUI
-            guiFig = figure('Name', 'Robot Position Control', 'NumberTitle', 'off', 'Position', [100, 100, 300, 400]);
-            
-            % Create X slider
-            uicontrol('Style', 'text', 'Position', [20, 350, 60, 20], 'String', 'X Position');
-            xSlider = uicontrol('Style', 'slider', 'Position', [100, 350, 150, 20], 'Min', -1, 'Max', 1, 'Value', 0);
-            addlistener(xSlider, 'Value', 'PostSet', @(src, evt) updatePosition(robot, xSlider, ySlider, zSlider));
-            
-            % Create Y slider
-            uicontrol('Style', 'text', 'Position', [20, 300, 60, 20], 'String', 'Y Position');
-            ySlider = uicontrol('Style', 'slider', 'Position', [100, 300, 150, 20], 'Min', -1, 'Max', 1, 'Value', 0);
-            addlistener(ySlider, 'Value', 'PostSet', @(src, evt) updatePosition(robot, xSlider, ySlider, zSlider));
-            
-            % Create Z slider
-            uicontrol('Style', 'text', 'Position', [20, 250, 60, 20], 'String', 'Z Position');
-            zSlider = uicontrol('Style', 'slider', 'Position', [100, 250, 150, 20], 'Min', 0, 'Max', 2, 'Value', 1);
-            addlistener(zSlider, 'Value', 'PostSet', @(src, evt) updatePosition(robot, xSlider, ySlider, zSlider));
+            % Define buttons for jogging in x, y, z directions
+            uicontrol('Style', 'pushbutton', 'String', 'Move +X', ...
+                      'Position', [50, 150, 100, 30], ...
+                      'Callback', @(src, event) main.moveRobot(robot, [0.01, 0, 0], estop));
+                  
+            uicontrol('Style', 'pushbutton', 'String', 'Move -X', ...
+                      'Position', [150, 150, 100, 30], ...
+                      'Callback', @(src, event) main.moveRobot(robot, [-0.01, 0, 0], estop));
+                  
+            uicontrol('Style', 'pushbutton', 'String', 'Move +Y', ...
+                      'Position', [50, 100, 100, 30], ...
+                      'Callback', @(src, event) main.moveRobot(robot, [0, 0.01, 0], estop));
+                  
+            uicontrol('Style', 'pushbutton', 'String', 'Move -Y', ...
+                      'Position', [150, 100, 100, 30], ...
+                      'Callback', @(src, event) main.moveRobot(robot, [0, -0.01, 0], estop));
+                  
+            uicontrol('Style', 'pushbutton', 'String', 'Move +Z', ...
+                      'Position', [50, 50, 100, 30], ...
+                      'Callback', @(src, event) main.moveRobot(robot, [0, 0, 0.01], estop));
+                  
+            uicontrol('Style', 'pushbutton', 'String', 'Move -Z', ...
+                      'Position', [150, 50, 100, 30], ...
+                      'Callback', @(src, event) main.moveRobot(robot, [0, 0, -0.01], estop));
+            uicontrol('Style', 'pushbutton', 'String', 'Reset X', ...
+                      'Position', [250, 150, 100, 30], ...
+                      'Callback', @(src, event) main.moveRobot(robot, [0, 0, 0], estop));
+                  
+            uicontrol('Style', 'pushbutton', 'String', 'Reset Y', ...
+                      'Position', [250, 100, 100, 30], ...
+                      'Callback', @(src, event) main.moveRobot(robot, [0, 0, 0], estop));
+                  
+            uicontrol('Style', 'pushbutton', 'String', 'Reset Z', ...
+                      'Position', [250, 50, 100, 30], ...
+                      'Callback', @(src, event) main.moveRobot(robot, [0, 0, 0], estop));
         end
         
-        % Update position callback function
-        function updatePosition(robot, xSlider, ySlider, zSlider)
-            % Retrieve slider values
-            xVal = get(xSlider, 'Value');
-            yVal = get(ySlider, 'Value');
-            zVal = get(zSlider, 'Value');
-            
-            % Call moveToTarget with the new position
-            targetPosition = [xVal, yVal, zVal];
-            estop = []; % Assuming E-stop implementation; replace as needed
-            robot.moveToTarget(targetPosition, estop);
+        function moveRobot(robot, offset, estop)
+            % Move the robot by the specified offset
+            % Calculate the current position of the robot
+            currentPos = robot.model.fkine(robot.model.getpos()).t';
+            newPos = currentPos + offset;
+
+            % Move the robot to the new position
+            robot.moveToTarget(newPos, estop);
         end
-
     end
-
-
 end
+    %  function createRobotControlGUI(robot)
+    %     % Create figure for the GUI
+    %     guiFig = figure('Name', 'Robot Position Control', 'NumberTitle', 'off', 'Position', [100, 100, 300, 400]);
+    % 
+    %     % Create X slider
+    %     uicontrol('Style', 'text', 'Position', [20, 350, 60, 20], 'String', 'X Position');
+    %     xSlider = uicontrol('Style', 'slider', 'Position', [100, 350, 150, 20], 'Min', 0, 'Max', 1.4, 'Value', 0);
+    % 
+    %     % Create Y slider
+    %     uicontrol('Style', 'text', 'Position', [20, 300, 60, 20], 'String', 'Y Position');
+    %     ySlider = uicontrol('Style', 'slider', 'Position', [100, 300, 150, 20], 'Min', -0.7, 'Max', 0.7, 'Value', 0);
+    % 
+    %     % Create Z slider
+    %     uicontrol('Style', 'text', 'Position', [20, 250, 60, 20], 'String', 'Z Position');
+    %     zSlider = uicontrol('Style', 'slider', 'Position', [100, 250, 150, 20], 'Min', 1, 'Max', 1.5, 'Value', 1);
+    % 
+    %     % Set listeners after creating all sliders
+    %     addlistener(xSlider, 'Value', 'PostSet', @(src, evt) main.updatePosition(robot, xSlider, ySlider, zSlider));
+    %     addlistener(ySlider, 'Value', 'PostSet', @(src, evt) main.updatePosition(robot, xSlider, ySlider, zSlider));
+    %     addlistener(zSlider, 'Value', 'PostSet', @(src, evt) main.updatePosition(robot, xSlider, ySlider, zSlider));
+    % end
+    % 
+    % 
+    %     % Update position callback function
+    %     function updatePosition(robot, xSlider, ySlider, zSlider)
+    %         % Retrieve slider values
+    %         xVal = get(xSlider, 'Value');
+    %         yVal = get(ySlider, 'Value');
+    %         zVal = get(zSlider, 'Value');
+    % 
+    %         % Call moveToTarget with the new position
+    %         targetPosition = [xVal, yVal, zVal];
+    % 
+    %         robot.moveRobotGUI(targetPosition, 2);
+    %     end
+
+    
