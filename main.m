@@ -55,7 +55,7 @@ classdef main
             robot2.rotateLink(5, 2/3 * pi, 50, env, estop);
 
             % Add final cake to the environment
-            cakePositions = [0, 0, 1];
+            cakePositions = [-0.15, 0, 1];
             env.addCake(0.1, cakePositions);
             robot2.moveToTarget([0.3, -0.5, 1.01], estop);
         end
