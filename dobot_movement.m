@@ -12,7 +12,7 @@
 
 classdef dobot_movement < handle
     methods (Static) 
-        function move_dobot(robot, estop)
+        function move_dobot(robot, estop, hard_estop)
         %% Plot and detect color for green square
         [f, v, data] = plyread('environment_files/green_square.ply', 'tri');
         vertexColours = [data.vertex.red, data.vertex.green, data.vertex.blue] / 255;
@@ -131,34 +131,34 @@ classdef dobot_movement < handle
             place_position2 = [-0.18, 0, 1.1];
             place_position3 = [-0.18, 0.1, 1.1];
             
-            dobot_movement.moveRobotToPosition(robot, square_position, estop);
+            dobot_movement.moveRobotToPosition(robot, square_position, estop, hard_estop);
             dobot_movement.hideObj(square1);
-            dobot_movement.moveRobotToPositionWithSquare(robot, traj_position, estop);
-            dobot_movement.moveRobotToPositionWithSquare(robot, place_position1, estop);
+            dobot_movement.moveRobotToPositionWithSquare(robot, traj_position, estop, hard_estop);
+            dobot_movement.moveRobotToPositionWithSquare(robot, place_position1, estop, hard_estop);
             dobot_movement.showObj(square3);
-            dobot_movement.moveRobotToPosition(robot, traj_position, estop);
-            dobot_movement.moveRobotToPosition(robot, octagon_position, estop);
+            dobot_movement.moveRobotToPosition(robot, traj_position, estop, hard_estop);
+            dobot_movement.moveRobotToPosition(robot, octagon_position, estop, hard_estop);
             dobot_movement.hideObj(octagon1);
-            dobot_movement.moveRobotToPositionWithOctagon(robot, traj_position, estop);
-            dobot_movement.moveRobotToPositionWithOctagon(robot, place_position2, estop);
+            dobot_movement.moveRobotToPositionWithOctagon(robot, traj_position, estop, hard_estop);
+            dobot_movement.moveRobotToPositionWithOctagon(robot, place_position2, estop, hard_estop);
             dobot_movement.showObj(octagon3);
-            dobot_movement.moveRobotToPosition(robot, traj_position, estop);
-            dobot_movement.moveRobotToPosition(robot, hexagon_position, estop);
+            dobot_movement.moveRobotToPosition(robot, traj_position, estop, hard_estop);
+            dobot_movement.moveRobotToPosition(robot, hexagon_position, estop, hard_estop);
             dobot_movement.hideObj(hexagon1);
-            dobot_movement.moveRobotToPositionWithHexagon(robot, traj_position, estop);
-            dobot_movement.moveRobotToPositionWithHexagon(robot, place_position3, estop);
+            dobot_movement.moveRobotToPositionWithHexagon(robot, traj_position, estop, hard_estop);
+            dobot_movement.moveRobotToPositionWithHexagon(robot, place_position3, estop, hard_estop);
             dobot_movement.showObj(hexagon3);
-            dobot_movement.moveRobotToPosition(robot, traj_position, estop);
+            dobot_movement.moveRobotToPosition(robot, traj_position, estop, hard_estop);
         end
         %% Function to move the robot from to position
-        function moveRobotToPosition(robot, position, estop)
+        function moveRobotToPosition(robot, position, estop, hard_estop)
             steps = 25;
             currentQ = robot.model.getpos();
             targetQ = robot.model.ikcon(transl(position), currentQ);
             traj = jtraj(currentQ, targetQ, steps);
             for i = 1:steps
                 % Pause movement if E-stop is active
-                while estop.IsStopped
+                while estop.IsStopped || hard_estop.IsStopped
                     pause(0.1); % Wait until E-stop is deactivated
                 end
                 robot.model.animate(traj(i, :));
@@ -168,7 +168,7 @@ classdef dobot_movement < handle
         end
         
         %% Function to move the robot from to position
-        function moveRobotToPositionWithSquare(robot, position, estop)
+        function moveRobotToPositionWithSquare(robot, position, estop, hard_estop)
             steps = 25;
             currentQ = robot.model.getpos();
             targetQ = robot.model.ikcon(transl(position), currentQ);
@@ -190,7 +190,7 @@ classdef dobot_movement < handle
         
             for i = 1:steps
                 % Pause movement if E-stop is active
-                while estop.IsStopped
+                while estop.IsStopped|| hard_estop.IsStopped
                     pause(0.1); % Wait until E-stop is deactivated
                 end
                 robot.model.animate(traj(i, :));
@@ -218,7 +218,7 @@ classdef dobot_movement < handle
         end
         
         %% Function to move the robot from to position
-        function moveRobotToPositionWithOctagon(robot, position, estop)
+        function moveRobotToPositionWithOctagon(robot, position, estop, hard_estop)
             steps = 25;
             currentQ = robot.model.getpos();
             targetQ = robot.model.ikcon(transl(position), currentQ);
@@ -240,7 +240,7 @@ classdef dobot_movement < handle
         
             for i = 1:steps
                 % Pause movement if E-stop is active
-                while estop.IsStopped
+                while estop.IsStopped || hard_estop.IsStopped
                     pause(0.1); % Wait until E-stop is deactivated
                 end
                 robot.model.animate(traj(i, :));
@@ -268,7 +268,7 @@ classdef dobot_movement < handle
         end
         
         %% Function to move the robot from to position
-        function moveRobotToPositionWithHexagon(robot, position, estop)
+        function moveRobotToPositionWithHexagon(robot, position, estop, hard_estop)
             steps = 25;
             currentQ = robot.model.getpos();
             targetQ = robot.model.ikcon(transl(position), currentQ);
@@ -290,7 +290,7 @@ classdef dobot_movement < handle
         
             for i = 1:steps
                 % Pause movement if E-stop is active
-                while estop.IsStopped
+                while estop.IsStopped || hard_estop.IsStopped
                     pause(0.1); % Wait until E-stop is deactivated
                 end
                 robot.model.animate(traj(i, :));
