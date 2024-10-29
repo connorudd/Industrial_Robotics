@@ -1,17 +1,16 @@
 classdef Hardware_Estop < handle
-    % EStopSystem: Class for managing an E-stop system with a single button.
+    % Hardware_Estop: Class for managing an E-stop system with a single button.
 
-    properties (Access = private)
+    properties
         arduinoObj    % Arduino connection object
         buttonPin     % Digital pin for button input
-        isStopped     % E-stop status
+        IsStopped     % E-stop status
         canRecover    % Recovery flag
     end
 
     methods
         % Constructor: Initialize Arduino connection and configure pin
         function obj = Hardware_Estop(comPort, buttonPin)
-            % Establish Arduino connection
             obj.arduinoObj = arduino(comPort, 'Uno', 'Libraries', 'I2C');
             obj.buttonPin = buttonPin;
 
@@ -19,7 +18,7 @@ classdef Hardware_Estop < handle
             configurePin(obj.arduinoObj, buttonPin, 'DigitalInput');
 
             % Initialize states
-            obj.isStopped = false;
+            obj.IsStopped = false;
             obj.canRecover = false;
 
             disp('E-Stop system initialized. Press button to activate.');
@@ -30,11 +29,9 @@ classdef Hardware_Estop < handle
             while true
                 buttonState = obj.readButton();
 
-                if buttonState == 1 && ~obj.isStopped
-                    % E-stop activated
+                if buttonState == 1 && ~obj.IsStopped
                     obj.activateEStop();
-                elseif buttonState == 1 && obj.isStopped && ~obj.canRecover
-                    % Recovery process initiated
+                elseif buttonState == 1 && obj.IsStopped && ~obj.canRecover
                     obj.recoverSystem();
                 end
 
@@ -42,49 +39,45 @@ classdef Hardware_Estop < handle
             end
         end
 
-        % Private method to read the button state
+        % (Other methods remain unchanged)
         function state = readButton(obj)
-            state = readDigitalPin(obj.arduinoObj, obj.buttonPin);  % 0 = Pressed
+            state = readDigitalPin(obj.arduinoObj, obj.buttonPin);
         end
 
-        % Private method to handle E-stop activation
         function activateEStop(obj)
             disp('E-STOP ACTIVATED! Halting all operations...');
             obj.stopRobot();
-            obj.isStopped = true;
+            obj.IsStopped = true;
             obj.canRecover = false;
-
-            obj.waitForButtonRelease();  % Ensure button is released
+            obj.waitForButtonRelease();
             disp('E-stop disengaged. Press button again to resume.');
         end
 
-        % Private method to handle system recovery
         function recoverSystem(obj)
-            obj.waitForButtonRelease();  % Ensure button is released
+            obj.waitForButtonRelease();
             disp('Resuming operations...');
             obj.resumeRobot();
-
-            obj.isStopped = false;
+            obj.IsStopped = false;
             obj.canRecover = true;
         end
 
-        % Private helper method to ensure the button is released
         function waitForButtonRelease(obj)
             while obj.readButton() == 1
-                pause(0.05);  % Small delay to avoid busy-waiting
+                pause(0.05);
             end
         end
 
-        % Placeholder method to stop the robot (override if needed)
         function stopRobot(obj)
             disp('Robot stopped successfully.');
         end
 
-        % Placeholder method to resume the robot (override if needed)
         function resumeRobot(obj)
             disp('Robot resumed successfully.');
         end
     end
 end
+
+
+
 
 
