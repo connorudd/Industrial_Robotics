@@ -70,8 +70,7 @@ function moveToTarget(self, targetPosition, estop)
                 warning('Collision detected with an obstacle! Recalculating path to avoid obstacle.');
                 q_now = self.model.getpos();
                 % Recalculate path segments to avoid oven
-                recalculatePath(self, q_now, T_target, numSteps, x_min_obstacle, x_max_obstacle, ...
-                                y_min_obstacle, y_max_obstacle, z_min_obstacle, z_max_obstacle, estop);
+                recalculatePath(self, q_now, T_target, numSteps, estop);
                 return; 
             end
 
@@ -82,8 +81,7 @@ function moveToTarget(self, targetPosition, estop)
                 warning('Collision detected with the table! Adjusting trajectory.');
                 q_now = self.model.getpos();
                 % Handle collision 
-                recalculatePath(self, q_now, T_target, numSteps, x_min_table, x_max_table, ...
-                                y_min_table, y_max_table,z_min_table, z_min_table, estop);
+                recalculatePath(self, q_now, T_target, numSteps, estop);
                 return; 
             end
 
@@ -99,7 +97,7 @@ function moveToTarget(self, targetPosition, estop)
     end
 end
 
-function recalculatePath(self, q_start, T_target, numSteps, x_min, x_max, y_min, y_max, z_min, z_max, estop)
+function recalculatePath(self, q_start, T_target, numSteps, estop)
     % Define the intermediate waypoint
     waypoint1 = transl(1.138, -0.394, 1.1);
     waypoint2 = transl(0.729, -0.714, 1.1);
