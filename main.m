@@ -20,21 +20,27 @@ classdef main
             
             % Create the E-stop button within the existing figure
             estop = EStop(gcf); % Add the E-stop button to the environment figure
+
+            comPort = 'COM3';
+            buttonPin = 'D2';
+            hard_estop = Hardware_Estop(comPort, buttonPin);
+            % hard_estop.run();
+            
             
             % % Begin moving the 6DOF robot with E-stop control
-            % main.move6DOF(robot2, env, bowlHandle, estop);
+            main.move6DOF(robot2, env, bowlHandle, estop, hard_estop);
             % 
-            % main.deleteShapes(shapeHandle3, shapeHandle2, shapeHandle1);
+            main.deleteShapes(shapeHandle3, shapeHandle2, shapeHandle1);
             % % delete shape handles
-            % dobot_move.move_dobot(robot1, estop);
+            dobot_move.move_dobot(robot1, estop, hard_estop);
 
 
             % gui
-            main.createRobotJoggingGUI(robot2, estop);
+            main.createRobotJoggingGUI(robot2, estop, hard_estop);
             pause;
         end
         
-        function move6DOF(robot2, env, bowlHandle, estop)
+        function move6DOF(robot2, env, bowlHandle, estop, hard_estop)
             % Series of movements with E-stop checks
             targets = [
                 0.3, -0.5, 1.01;    %plate #1
@@ -47,27 +53,27 @@ classdef main
             
             % first steps of the simulation 
             for i = 1:size(targets, 1)
-                robot2.moveToTarget(targets(i, :), estop);
+                robot2.moveToTarget(targets(i, :), estop, hard_estop);
             end
 
             % Mixing 
-            robot2.rotateLink(6, pi, 50, env, estop);
+            robot2.rotateLink(6, pi, 50, env, estop, hard_estop);
 
             % Delete previous bowl 
             if ~isempty(bowlHandle) && isvalid(bowlHandle)
                 delete(bowlHandle);
             end
             % Move into oven (add bowls)
-            robot2.rotateLink(5, -2/3 * pi, 50, env, estop);
+            robot2.rotateLink(5, -2/3 * pi, 50, env, estop, hard_estop);
             pause(1);
             % Move out of oven (add cakes)
-            robot2.rotateLink(5, 2/3 * pi, 50, env, estop);
+            robot2.rotateLink(5, 2/3 * pi, 50, env, estop, hard_estop);
 
             % Add final cake to the environment
             cakePositions = [-0.15, 0, 1];
             env.addCake(0.1, cakePositions);
             % move away from cake
-            robot2.moveToTarget([0.3, -0.5, 1.01], estop);
+            robot2.moveToTarget([0.3, -0.5, 1.01], estop, hard_estop);
         end
         
         % delete shapes as they are replotted during dobot sim
@@ -84,7 +90,7 @@ classdef main
         end
 
 
-        function createRobotJoggingGUI(robot, estop)
+        function createRobotJoggingGUI(robot, estop, hard_estop)
             % Create a figure for jogging the robot
             jogFig = figure('Name', 'Robot Jogging Controls', 'NumberTitle', 'off', ...
                             'Position', [100, 100, 300, 200]);
@@ -92,27 +98,27 @@ classdef main
             % Define buttons for jogging in x, y, z directions
             uicontrol('Style', 'pushbutton', 'String', 'Move +X', ...
                       'Position', [50, 150, 100, 30], ...
-                      'Callback', @(src, event) main.moveRobot(robot, [0.03, 0, 0], estop));
+                      'Callback', @(src, event) main.moveRobot(robot, [0.03, 0, 0], estop, hard_estop));
                   
             uicontrol('Style', 'pushbutton', 'String', 'Move -X', ...
                       'Position', [150, 150, 100, 30], ...
-                      'Callback', @(src, event) main.moveRobot(robot, [-0.03, 0, 0], estop));
+                      'Callback', @(src, event) main.moveRobot(robot, [-0.03, 0, 0], estop, hard_estop));
                   
             uicontrol('Style', 'pushbutton', 'String', 'Move +Y', ...
                       'Position', [50, 100, 100, 30], ...
-                      'Callback', @(src, event) main.moveRobot(robot, [0, 0.03, 0], estop));
+                      'Callback', @(src, event) main.moveRobot(robot, [0, 0.03, 0], estop, hard_estop));
                   
             uicontrol('Style', 'pushbutton', 'String', 'Move -Y', ...
                       'Position', [150, 100, 100, 30], ...
-                      'Callback', @(src, event) main.moveRobot(robot, [0, -0.03, 0], estop));
+                      'Callback', @(src, event) main.moveRobot(robot, [0, -0.03, 0], estop, hard_estop));
                   
             uicontrol('Style', 'pushbutton', 'String', 'Move +Z', ...
                       'Position', [50, 50, 100, 30], ...
-                      'Callback', @(src, event) main.moveRobot(robot, [0, 0, 0.03], estop));
+                      'Callback', @(src, event) main.moveRobot(robot, [0, 0, 0.03], estop, hard_estop));
                   
             uicontrol('Style', 'pushbutton', 'String', 'Move -Z', ...
                       'Position', [150, 50, 100, 30], ...
-                      'Callback', @(src, event) main.moveRobot(robot, [0, 0, -0.03], estop));
+                      'Callback', @(src, event) main.moveRobot(robot, [0, 0, -0.03], estop, hard_estop));
 
             % joint control
             uicontrol('Style', 'pushbutton', 'String', 'Rotate Link 1', ...
@@ -140,14 +146,14 @@ classdef main
                       'Callback', @(src, event) main.rotateRobot(robot, 6, 0.1));
         end
         
-        function moveRobot(robot, offset, estop)
+        function moveRobot(robot, offset, estop, hard_estop)
             % Move the robot by the specified offset
             % Calculate the current position of the robot
             currentPos = robot.model.fkine(robot.model.getpos()).t';
             newPos = currentPos + offset;
 
             % Move the robot to the new position
-            robot.moveToTargetGUI(newPos, estop);
+            robot.moveToTargetGUI(newPos, estop, hard_estop);
         end
 
         function rotateRobot (robot, linkIndex, angle)
