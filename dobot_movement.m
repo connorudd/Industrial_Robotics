@@ -16,7 +16,7 @@ classdef dobot_movement < handle
         %% Plot and detect color for green square
         [f, v, data] = plyread('environment_files/green_square.ply', 'tri');
         vertexColours = [data.vertex.red, data.vertex.green, data.vertex.blue] / 255;
-        square_start_position = [0.25, 0, 0];
+        square_start_position = [-0.4, -0.2, 1];
         square_scale_factor = 0.002;
         square_v_scaled = v * square_scale_factor;
         square_v_transformation = square_v_scaled + square_start_position;
@@ -39,7 +39,7 @@ classdef dobot_movement < handle
         
         [f, v, data] = plyread('environment_files/green_square.ply', 'tri');
         vertexColours = [data.vertex.red, data.vertex.green, data.vertex.blue] / 255;
-        square_start_position3 = [0, 0.25, 0];
+        square_start_position3 = [-0.18, 0, 1.05];
         square_scale_factor3 = 0.002;
         square_v_scaled3 = v * square_scale_factor3;
         square_v_transformation3 = square_v_scaled3 + square_start_position3;
@@ -52,7 +52,7 @@ classdef dobot_movement < handle
         %% Plot and detect color for blue octagon
         [f, v, data] = plyread('environment_files/blue_octagon.ply', 'tri');
         vertexColours = [data.vertex.red, data.vertex.green, data.vertex.blue] / 255;
-        octagon_start_position = [0.25, 0.07, 0];
+        octagon_start_position = [-0.55, -0.2, 1];
         octagon_scale_factor = 0.002;
         octagon_v_scaled = v * octagon_scale_factor;
         octagon_v_transformation = octagon_v_scaled + octagon_start_position;
@@ -75,7 +75,7 @@ classdef dobot_movement < handle
         
         [f, v, data] = plyread('environment_files/blue_octagon.ply', 'tri');
         vertexColours = [data.vertex.red, data.vertex.green, data.vertex.blue] / 255;
-        octagon_start_position3 = [0.1, 0.25, 0];
+        octagon_start_position3 = [-0.18, 0.1, 1.05];
         octagon_scale_factor3 = 0.002;
         octagon_v_scaled3 = v * octagon_scale_factor3;
         octagon_v_transformation3 = octagon_v_scaled3 + octagon_start_position3;
@@ -88,7 +88,7 @@ classdef dobot_movement < handle
         %% Plot and detect color for red hexagon
         [f, v, data] = plyread('environment_files/red_hexagon.ply', 'tri');
         vertexColours = [data.vertex.red, data.vertex.green, data.vertex.blue] / 255;
-        hexagon_start_position = [0.25, -0.07, 0];
+        hexagon_start_position = [-0.25, -0.2, 1];
         hexagon_scale_factor = 0.002;
         hexagon_v_scaled = v * hexagon_scale_factor;
         hexagon_v_transformation = hexagon_v_scaled + hexagon_start_position;
@@ -111,7 +111,7 @@ classdef dobot_movement < handle
         
         [f, v, data] = plyread('environment_files/red_hexagon.ply', 'tri');
         vertexColours = [data.vertex.red, data.vertex.green, data.vertex.blue] / 255;
-        hexagon_start_position3 = [0.28, 0.2, 0];
+        hexagon_start_position3 = [-0.18, 0.05, 1.05];
         hexagon_scale_factor3 = 0.002;
         hexagon_v_scaled3 = v * hexagon_scale_factor3;
         hexagon_v_transformation3 = hexagon_v_scaled3 + hexagon_start_position3;
@@ -120,35 +120,35 @@ classdef dobot_movement < handle
             'FaceColor', 'interp', ...
             'EdgeColor', 'none');
         dobot_movement.hideObj(hexagon3);
+
+            square_position = [-0.4, -0.2, 1.05];
+            octagon_position = [-0.55, -0.2, 1.05];
+            hexagon_position = [-0.25, -0.2, 1.05];
         
-        %%
-        
-            square_position = [0.28, 0, 0.07];
-            octagon_position = [0.28, -0.16, 0.07];    % y-coordinate
-            hexagon_position = [0.2, -0.28, 0.07];    % y-coordinate
-            traj_position = [0.2, 0.15, 0.2];
-            place_position1 = [0, 0.2, 0.07];
-            place_position2 = [0.2, 0.2, 0.07];
-            place_position3 = [0.4, 0.1, 0.07];
+            traj_position = [-0.45, 0, 1.1];
+
+            place_position1 = [-0.18, 0.05, 1.1];
+            place_position2 = [-0.18, 0, 1.1];
+            place_position3 = [-0.18, 0.1, 1.1];
             
             dobot_movement.moveRobotToPosition(robot, square_position, estop);
             dobot_movement.hideObj(square1);
-            dobot_movement.moveRobotToPositionWithSquare(robot, traj_position);
-            dobot_movement.moveRobotToPositionWithSquare(robot, place_position1);
+            dobot_movement.moveRobotToPositionWithSquare(robot, traj_position, estop);
+            dobot_movement.moveRobotToPositionWithSquare(robot, place_position1, estop);
             dobot_movement.showObj(square3);
-            dobot_movement.moveRobotToPosition(robot, traj_position);
-            dobot_movement.moveRobotToPosition(robot, octagon_position);
+            dobot_movement.moveRobotToPosition(robot, traj_position, estop);
+            dobot_movement.moveRobotToPosition(robot, octagon_position, estop);
             dobot_movement.hideObj(octagon1);
-            dobot_movement.moveRobotToPositionWithOctagon(robot, traj_position);
-            dobot_movement.moveRobotToPositionWithOctagon(robot, place_position2);
+            dobot_movement.moveRobotToPositionWithOctagon(robot, traj_position, estop);
+            dobot_movement.moveRobotToPositionWithOctagon(robot, place_position2, estop);
             dobot_movement.showObj(octagon3);
-            dobot_movement.moveRobotToPosition(robot, traj_position);
-            dobot_movement.moveRobotToPosition(robot, hexagon_position);
+            dobot_movement.moveRobotToPosition(robot, traj_position, estop);
+            dobot_movement.moveRobotToPosition(robot, hexagon_position, estop);
             dobot_movement.hideObj(hexagon1);
-            dobot_movement.moveRobotToPositionWithHexagon(robot, traj_position);
-            dobot_movement.moveRobotToPositionWithHexagon(robot, place_position3);
+            dobot_movement.moveRobotToPositionWithHexagon(robot, traj_position, estop);
+            dobot_movement.moveRobotToPositionWithHexagon(robot, place_position3, estop);
             dobot_movement.showObj(hexagon3);
-            dobot_movement.moveRobotToPosition(robot, traj_position);
+            dobot_movement.moveRobotToPosition(robot, traj_position, estop);
         end
         %% Function to move the robot from to position
         function moveRobotToPosition(robot, position, estop)
@@ -157,7 +157,7 @@ classdef dobot_movement < handle
             targetQ = robot.model.ikcon(transl(position), currentQ);
             traj = jtraj(currentQ, targetQ, steps);
             for i = 1:steps
-                         % Pause movement if E-stop is active
+                % Pause movement if E-stop is active
                 while estop.IsStopped
                     pause(0.1); % Wait until E-stop is deactivated
                 end
@@ -168,7 +168,7 @@ classdef dobot_movement < handle
         end
         
         %% Function to move the robot from to position
-        function moveRobotToPositionWithSquare(robot, position)
+        function moveRobotToPositionWithSquare(robot, position, estop)
             steps = 25;
             currentQ = robot.model.getpos();
             targetQ = robot.model.ikcon(transl(position), currentQ);
@@ -189,6 +189,10 @@ classdef dobot_movement < handle
                 'EdgeColor', 'none');
         
             for i = 1:steps
+                % Pause movement if E-stop is active
+                while estop.IsStopped
+                    pause(0.1); % Wait until E-stop is deactivated
+                end
                 robot.model.animate(traj(i, :));
         
                 current_q = robot.model.getpos();
@@ -214,7 +218,7 @@ classdef dobot_movement < handle
         end
         
         %% Function to move the robot from to position
-        function moveRobotToPositionWithOctagon(robot, position)
+        function moveRobotToPositionWithOctagon(robot, position, estop)
             steps = 25;
             currentQ = robot.model.getpos();
             targetQ = robot.model.ikcon(transl(position), currentQ);
@@ -235,6 +239,10 @@ classdef dobot_movement < handle
                 'EdgeColor', 'none');
         
             for i = 1:steps
+                % Pause movement if E-stop is active
+                while estop.IsStopped
+                    pause(0.1); % Wait until E-stop is deactivated
+                end
                 robot.model.animate(traj(i, :));
         
                 current_q = robot.model.getpos();
@@ -260,7 +268,7 @@ classdef dobot_movement < handle
         end
         
         %% Function to move the robot from to position
-        function moveRobotToPositionWithHexagon(robot, position)
+        function moveRobotToPositionWithHexagon(robot, position, estop)
             steps = 25;
             currentQ = robot.model.getpos();
             targetQ = robot.model.ikcon(transl(position), currentQ);
@@ -281,6 +289,10 @@ classdef dobot_movement < handle
                 'EdgeColor', 'none');
         
             for i = 1:steps
+                % Pause movement if E-stop is active
+                while estop.IsStopped
+                    pause(0.1); % Wait until E-stop is deactivated
+                end
                 robot.model.animate(traj(i, :));
         
                 current_q = robot.model.getpos();
