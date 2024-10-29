@@ -21,16 +21,16 @@ classdef main
             % Create the E-stop button within the existing figure
             estop = EStop(gcf); % Add the E-stop button to the environment figure
             
-            % Begin moving the 6DOF robot with E-stop control
-            main.move6DOF(robot2, env, bowlHandle, estop);
-            
-            main.deleteShapes(shapeHandle3, shapeHandle2, shapeHandle1);
-            % delete shape handles
-            dobot_move.move_dobot(robot1, estop);
+            % % Begin moving the 6DOF robot with E-stop control
+            % main.move6DOF(robot2, env, bowlHandle, estop);
+            % 
+            % main.deleteShapes(shapeHandle3, shapeHandle2, shapeHandle1);
+            % % delete shape handles
+            % dobot_move.move_dobot(robot1, estop);
 
 
             % gui
-            % main.createRobotJoggingGUI(robot2, estop);
+            main.createRobotJoggingGUI(robot2, estop);
             pause;
         end
         
@@ -44,7 +44,8 @@ classdef main
                 0.7, -0.5, 1.01;    %plate #3
                 0, 0, 1.05          %bowl
             ];
-
+            
+            % first steps of the simulation 
             for i = 1:size(targets, 1)
                 robot2.moveToTarget(targets(i, :), estop);
             end
@@ -52,11 +53,11 @@ classdef main
             % Mixing 
             robot2.rotateLink(6, pi, 50, env, estop);
 
-            % Delete previous bowl and continue tasks
+            % Delete previous bowl 
             if ~isempty(bowlHandle) && isvalid(bowlHandle)
                 delete(bowlHandle);
             end
-            % Move inot oven (add bowls)
+            % Move into oven (add bowls)
             robot2.rotateLink(5, -2/3 * pi, 50, env, estop);
             pause(1);
             % Move out of oven (add cakes)
@@ -65,9 +66,11 @@ classdef main
             % Add final cake to the environment
             cakePositions = [-0.15, 0, 1];
             env.addCake(0.1, cakePositions);
+            % move away from cake
             robot2.moveToTarget([0.3, -0.5, 1.01], estop);
         end
-
+        
+        % delete shapes as they are replotted during dobot sim
         function deleteShapes (shapeHandle3, shapeHandle2, shapeHandle1)
              if ~isempty(shapeHandle3) && isvalid(shapeHandle3)
                 delete(shapeHandle3);
@@ -110,6 +113,31 @@ classdef main
             uicontrol('Style', 'pushbutton', 'String', 'Move -Z', ...
                       'Position', [150, 50, 100, 30], ...
                       'Callback', @(src, event) main.moveRobot(robot, [0, 0, -0.03], estop));
+
+            % joint control
+            uicontrol('Style', 'pushbutton', 'String', 'Rotate Link 1', ...
+                      'Position', [250, 50, 100, 30], ...
+                      'Callback', @(src, event) main.rotateRobot(robot, 1, 0.1));
+                  
+            uicontrol('Style', 'pushbutton', 'String', 'Rotate Link 2', ...
+                      'Position', [250, 100, 100, 30], ...
+                      'Callback', @(src, event) main.rotateRobot(robot, 2, 0.1));
+                  
+            uicontrol('Style', 'pushbutton', 'String', 'Rotate Link 3', ...
+                      'Position', [250, 150, 100, 30], ...
+                      'Callback', @(src, event) main.rotateRobot(robot, 3, 0.1));
+
+            uicontrol('Style', 'pushbutton', 'String', 'Rotate Link 4', ...
+                      'Position', [350, 50, 100, 30], ...
+                      'Callback', @(src, event) main.rotateRobot(robot, 4, 0.1));
+                  
+            uicontrol('Style', 'pushbutton', 'String', 'Rotate Link 5', ...
+                      'Position', [350, 100, 100, 30], ...
+                      'Callback', @(src, event) main.rotateRobot(robot, 5, 0.1));
+                  
+            uicontrol('Style', 'pushbutton', 'String', 'Rotate Link 6', ...
+                      'Position', [350, 150, 100, 30], ...
+                      'Callback', @(src, event) main.rotateRobot(robot, 6, 0.1));
         end
         
         function moveRobot(robot, offset, estop)
@@ -121,5 +149,10 @@ classdef main
             % Move the robot to the new position
             robot.moveToTargetGUI(newPos, estop);
         end
+
+        function rotateRobot (robot, linkIndex, angle)
+
+            robot.rotateLinkGUI(linkIndex, angle);
+        end 
     end
 end

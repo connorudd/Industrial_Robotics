@@ -222,9 +222,10 @@ function rotateLink(self, linkIndex, angle, numSteps, environment, estop)
             end
 
         end
-        pause(0.05); % Adjust pause duration as needed
+        pause(0.05); 
     end
 end
+
  function moveToTargetGUI(self, targetPosition, estop)
     % Create a transformation matrix for the target position
     T_target = transl(targetPosition(1), targetPosition(2), targetPosition(3));
@@ -267,6 +268,39 @@ end
         end
     end
  end
+
+ %% Rotate the link by a given angle (in radians)
+function rotateLinkGUI(self, linkIndex, angle)
+    numSteps = 10;
+    % Validate link index
+    if linkIndex < 1 || linkIndex > 6
+        error('Link index must be between 1 and 6.');
+    end
+
+    % Get the current joint angles
+    q_current = self.model.getpos();
+
+    % Calculate the target angle for the specified link
+    target_angle = q_current(linkIndex) + angle;
+
+    % Ensure the target angle remains within joint limits
+    target_angle = mod(target_angle, 2 * pi); % Wrap the angle to [0, 2*pi]
+    if target_angle > pi
+        target_angle = target_angle - 2 * pi; % Keep it in the range [-pi, pi]
+    end
+
+    % Interpolate between the current angle and the target angle
+    angles = linspace(q_current(linkIndex), target_angle, numSteps);
+
+    % Animate the movement of the robot in steps
+    for i = 1:numSteps
+        % Update the specified joint angle
+        q_current(linkIndex) = angles(i);
+        % Animate the current configuration
+        self.model.animate(q_current);
+    end 
+        pause(0.05);
+end
 
 %% CreateModel
         function CreateModel(self)       
