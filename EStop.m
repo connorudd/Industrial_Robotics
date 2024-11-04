@@ -17,18 +17,18 @@ classdef EStop < handle
         function toggleStop(obj, ~, ~)
             % Toggle function to handle STOP, RESUME, and READY TO RESUME states
             if obj.IsStopped && obj.IsReadyToResume
-                % Second press after RESUME: truly resumes the action
+                % Stop
                 obj.Button.String = 'STOP';
                 obj.Button.BackgroundColor = 'red';
                 obj.IsStopped = false;
                 obj.IsReadyToResume = false;
             elseif obj.IsStopped && ~obj.IsReadyToResume
-                % First press after STOP: sets to READY TO RESUME
+                % Resume
                 obj.Button.String = 'RESUME';
                 obj.Button.BackgroundColor = 'blue';
                 obj.IsReadyToResume = true;
             else
-                % Initial STOP activation
+                % Reactivate before resume 
                 obj.Button.String = 'REACTIVATE';
                 obj.Button.BackgroundColor = 'green';
                 obj.IsStopped = true;

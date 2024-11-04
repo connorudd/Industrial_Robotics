@@ -189,7 +189,7 @@ function rotateLink(self, linkIndex, angle, numSteps, environment, estop, hard_e
             T_current = self.model.fkine(q_current);
             bowlPosition = T_current.t';
 
-              % Delete previous bowl if it exists
+            % Delete previous bowl if it exists
             if ~isempty(bowlHandle) && isvalid(bowlHandle)
                 delete(bowlHandle);
             end

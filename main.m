@@ -21,7 +21,7 @@ classdef main
             % Create the E-stop button within the existing figure
             estop = EStop(gcf); % Add the E-stop button to the environment figure
 
-            comPort = 'COM3';
+            comPort = 'COM5';
             buttonPin = 'D2';
             hard_estop = Hardware_Estop(comPort, buttonPin);
             % hard_estop.run();
@@ -31,12 +31,12 @@ classdef main
             main.move6DOF(robot2, env, bowlHandle, estop, hard_estop);
             % 
             main.deleteShapes(shapeHandle3, shapeHandle2, shapeHandle1);
-            % % delete shape handles
+            % delete shape handles
             dobot_move.move_dobot(robot1, estop, hard_estop);
 
 
             % gui
-            main.createRobotJoggingGUI(robot2, estop, hard_estop);
+            % main.createRobotJoggingGUI(robot2, estop, hard_estop);
             pause;
         end
         

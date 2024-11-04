@@ -16,88 +16,79 @@ classdef SixDOFRobot < RobotBaseClass
             self.homeQ = self.RealQToModelQ(self.defaultRealQ);
             self.PlotAndColourRobot();
         end
-function moveToTarget(self, targetPosition, estop)
-    % Create a transformation matrix for the target position
+function moveToTarget(self, targetPosition, estop, hard_estop)
     T_target = transl(targetPosition(1), targetPosition(2), targetPosition(3));
-
-    % Calculate the inverse kinematics to find joint angles
-    q_sol = self.model.ikine(T_target, 'mask', [1, 1, 1, 0, 0, 0]); % Mask to consider only position
-
+    q_sol = self.model.ikine(T_target, 'mask', [1, 1, 1, 0, 0, 0]);
+    
     if isempty(q_sol)
         error('No solution found for the target position');
     else
-        % Get the current joint angles
         q_current = self.model.getpos();
-
-        % Define the number of steps for smooth animation
         numSteps = 150;
         
-        % Ensure shortest travel distance for joint 1 (300 = -60) 
         delta2 = q_sol(1) - q_current(1);
         if abs(delta2) > pi
-            if delta2 > 0
-                q_sol(1) = q_sol(1) - 2 * pi;
-            else
-                q_sol(1) = q_sol(1) + 2 * pi;
-            end
+            q_sol(1) = q_sol(1) - sign(delta2) * 2 * pi;
         end
-
-        % Interpolate between the current and target joint angles
+        
         qMatrix = jtraj(q_current, q_sol, numSteps);
-
-        % Define oven boundaries
+        
+        % Define collision zones
         x_min_obstacle = 0.15; x_max_obstacle = 0.35;
         y_min_obstacle = 0.2; y_max_obstacle = 0.8;
         z_min_obstacle = 0.95; z_max_obstacle = 2;
-
-        % Define table boundaries
+        
         x_min_table = -1; x_max_table = 1;
         y_min_table = -1; y_max_table = 1;
         z_min_table = 0; z_max_table = 0.9;
-
-        % Check for collision and animate the robot movement
-        for i = 1:numSteps
-            % Get the transformation matrix for the current joint configuration
+        
+        % Timer to control animation and E-stop
+        timerObj = timer('ExecutionMode', 'fixedRate', 'Period', 0.05, 'TasksToExecute', numSteps);
+        
+        timerObj.TimerFcn = @(~, ~) animateStep();
+        
+        % Step counter
+        i = 1;
+    end 
+        function animateStep()
+            if estop.IsStopped || hard_estop.IsStopped
+                stop(timerObj); % Pause timer if E-stop is activated
+                return;
+            end
+            
+            % Get end-effector position for collision checks
             T_current = self.model.fkine(qMatrix(i, :));
-
-            % Extract end-effector position from transformation matrix
             current_position = T_current.t;
-
-            % Check if the current position is within the oven
-            if current_position(1) >= x_min_obstacle && current_position(1) <= x_max_obstacle && ...
+            
+            if (current_position(1) >= x_min_obstacle && current_position(1) <= x_max_obstacle && ...
                current_position(2) >= y_min_obstacle && current_position(2) <= y_max_obstacle && ...
-               current_position(3) >= z_min_obstacle && current_position(3) <= z_max_obstacle
-                warning('Collision detected with an obstacle! Recalculating path to avoid obstacle.');
-                q_now = self.model.getpos();
-                % Recalculate path segments to avoid oven
-                recalculatePath(self, q_now, T_target, numSteps, estop);
-                return; 
+               current_position(3) >= z_min_obstacle && current_position(3) <= z_max_obstacle)
+                warning('Collision with obstacle detected. Recalculating path.');
+                stop(timerObj);
+                recalculatePath(self, q_current, T_target, numSteps, estop, hard_estop);
+                return;
             end
-
-            % Check for collision with the table
-            if current_position(1) >= x_min_table && current_position(1) <= x_max_table && ...
+            
+            if (current_position(1) >= x_min_table && current_position(1) <= x_max_table && ...
                current_position(2) >= y_min_table && current_position(2) <= y_max_table && ...
-               current_position(3) >= z_min_table && current_position(3) <= z_max_table
-                warning('Collision detected with the table! Adjusting trajectory.');
-                q_now = self.model.getpos();
-                % Handle collision 
-                recalculatePath(self, q_now, T_target, numSteps, estop);
-                return; 
+               current_position(3) >= z_min_table && current_position(3) <= z_max_table)
+                warning('Collision with table detected. Adjusting trajectory.');
+                stop(timerObj);
+                recalculatePath(self, q_current, T_target, numSteps, estop, hard_estop);
+                return;
             end
-
-            % Pause movement if E-stop is active
-            while estop.IsStopped
-                pause(0.1); % Wait until E-stop is deactivated
-            end
-
-            % If no collision, animate the movement
+            
+            % Animate if no collision
             self.model.animate(qMatrix(i, :));
-            pause(0.05);
+            i = i + 1;
         end
-    end
-end
+        
+        % Start the timer
+        start(timerObj);
+    end 
 
-function recalculatePath(self, q_start, T_target, numSteps, estop)
+
+function recalculatePath(self, q_start, T_target, numSteps, estop, hard_estop)
     % Define the intermediate waypoint
     waypoint1 = transl(1.138, -0.394, 1.1);
     waypoint2 = transl(0.729, -0.714, 1.1);
@@ -124,7 +115,7 @@ function recalculatePath(self, q_start, T_target, numSteps, estop)
     % Animate each segment
     for j = 1:size(qMatrix_segment1, 1)
          % Pause movement if E-stop is active
-            while estop.IsStopped
+            while estop.IsStopped || hard_estop.IsStopped
                 pause(0.1); % Wait until E-stop is deactivated
             end
         self.model.animate(qMatrix_segment1(j, :));
@@ -132,7 +123,7 @@ function recalculatePath(self, q_start, T_target, numSteps, estop)
     end
     for j = 1:size(qMatrix_segment2, 1)
          % Pause movement if E-stop is active
-            while estop.IsStopped
+            while estop.IsStopped || hard_estop.IsStopped
                 pause(0.1); % Wait until E-stop is deactivated
             end
         self.model.animate(qMatrix_segment2(j, :));
@@ -140,7 +131,7 @@ function recalculatePath(self, q_start, T_target, numSteps, estop)
     end
     for j = 1:size(qMatrix_segment3, 1)
          % Pause movement if E-stop is active
-            while estop.IsStopped
+            while estop.IsStopped || hard_estop.IsStopped
                 pause(0.1); % Wait until E-stop is deactivated
             end
         self.model.animate(qMatrix_segment3(j, :));
@@ -149,7 +140,7 @@ function recalculatePath(self, q_start, T_target, numSteps, estop)
 end
 
 %% Rotate the link by a given angle (in radians)
-function rotateLink(self, linkIndex, angle, numSteps, environment, estop)
+function rotateLink(self, linkIndex, angle, numSteps, environment, estop, hard_estop)
     persistent bowlHandle;
     persistent cakeHandle;
     % Validate link index
@@ -177,7 +168,7 @@ function rotateLink(self, linkIndex, angle, numSteps, environment, estop)
         % Update the specified joint angle
         q_current(linkIndex) = angles(i);
         % Pause movement if E-stop is active
-        while estop.IsStopped
+        while estop.IsStopped || hard_estop.IsStopped
             pause(0.1); % Wait until E-stop is deactivated
         end
         % Animate the current configuration
@@ -189,7 +180,7 @@ function rotateLink(self, linkIndex, angle, numSteps, environment, estop)
             T_current = self.model.fkine(q_current);
             bowlPosition = T_current.t';
 
-              % Delete previous bowl if it exists
+            % Delete previous bowl if it exists
             if ~isempty(bowlHandle) && isvalid(bowlHandle)
                 delete(bowlHandle);
             end
@@ -222,11 +213,11 @@ function rotateLink(self, linkIndex, angle, numSteps, environment, estop)
             end
 
         end
-        pause(0.05); % Adjust pause duration as needed
+        pause(0.05); 
     end
 end
 
- function moveToTargetGUI(self, targetPosition, estop)
+ function moveToTargetGUI(self, targetPosition, estop, hard_estop)
     % Create a transformation matrix for the target position
     T_target = transl(targetPosition(1), targetPosition(2), targetPosition(3));
 
@@ -259,7 +250,7 @@ end
         % Check for collision and animate the robot movement
         for i = 1:numSteps
             % Pause movement if E-stop is active
-            while estop.IsStopped
+            while estop.IsStopped || hard_estop.IsStopped
                 pause(0.1); % Wait until E-stop is deactivated
             end
             % If no collision, animate the movement
@@ -270,7 +261,7 @@ end
  end
 
  %% Rotate the link by a given angle (in radians)
-function rotateLinkGUI(self, linkIndex, angle, environment, estop)
+function rotateLinkGUI(self, linkIndex, angle)
     numSteps = 10;
     % Validate link index
     if linkIndex < 1 || linkIndex > 6
@@ -296,54 +287,10 @@ function rotateLinkGUI(self, linkIndex, angle, environment, estop)
     for i = 1:numSteps
         % Update the specified joint angle
         q_current(linkIndex) = angles(i);
-        % Pause movement if E-stop is active
-        while estop.IsStopped
-            pause(0.1); % Wait until E-stop is deactivated
-        end
         % Animate the current configuration
         self.model.animate(q_current);
-
-        % Check if link 5 is rotating to reposition the bowl
-        if linkIndex == 5 && angle < 0
-            % Get the current end-effector position
-            T_current = self.model.fkine(q_current);
-            bowlPosition = T_current.t';
-
-              % Delete previous bowl if it exists
-            if ~isempty(bowlHandle) && isvalid(bowlHandle)
-                delete(bowlHandle);
-            end
-
-            % Add updated bowl position and store its handle
-            bowlHandle = environment.addBowl(2, bowlPosition);
-            if i == numSteps
-                    if ~isempty(bowlHandle) && isvalid(bowlHandle)
-                delete(bowlHandle);
-                    end
-            end
-
-        end
-        if linkIndex == 5 && angle > 0
-            % Get the current end-effector position
-            T_current = self.model.fkine(q_current);
-            cakePosition = T_current.t';
-
-              % Delete previous bowl if it exists
-            if ~isempty(cakeHandle) && isvalid(cakeHandle)
-                delete(cakeHandle);
-            end
-
-            % Add updated bowl position and store its handle
-            cakeHandle = environment.addCake(0.1, cakePosition);
-            if i == numSteps
-                    if ~isempty(cakeHandle) && isvalid(cakeHandle)
-                        delete(cakeHandle);
-                    end
-            end
-
-        end
-        pause(0.05); % Adjust pause duration as needed
-    end
+    end 
+        pause(0.05);
 end
 
 %% CreateModel
