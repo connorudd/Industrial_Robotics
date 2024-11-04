@@ -3,45 +3,50 @@ classdef main
         function plotEnvironment()
             % Initialize environment and robots
             env = environment(); % Create the environment instance
-            dobot_move = dobot_movement();
+            dobot_move = dobot_movement(); % create move dobot instance
             env.plotEnvironment(); % Plot the environment
-            bowlPositions = [0, 0, 1.05];
+            % plot starting bowl
+            bowlPositions = [0, 0, 1.05]; 
             bowlHandle = env.addBowl(2, bowlPositions);
+            % plot starting shapes
             shapeHandle1 = env.addShape1(0.0025);
             shapeHandle2 = env.addShape2(0.0025);
             shapeHandle3 = env.addShape3(0.0025);
-
+            % create robots 
             robot1 = Dobot();  % Initialize Dobot robot
             robot2 = SixDOFRobot(); % Initialize 6-DOF robot
 
-            % Set up the view
+            % Set up the view (for animation)
             axis([-2 2 -2 2 0 3]);
             view(3);
+            % axis equal %for world
             
             % Create the E-stop button within the existing figure
             estop = EStop(gcf); % Add the E-stop button to the environment figure
-
+            
+            % hardware estop 
             comPort = 'COM5';
             buttonPin = 'D2';
             hard_estop = Hardware_Estop(comPort, buttonPin);
             % hard_estop.run();
             
             
-            % % Begin moving the 6DOF robot with E-stop control
+            %% COMPLETE ANIMATION
+            % move 6DOF
             main.move6DOF(robot2, env, bowlHandle, estop, hard_estop);
-            % 
+            % delete dobt shapes 
             main.deleteShapes(shapeHandle3, shapeHandle2, shapeHandle1);
-            % delete shape handles
+            % move dobot (shapes will show) 
             dobot_move.move_dobot(robot1, estop, hard_estop);
 
-
-            % gui
+            %% GUI
             % main.createRobotJoggingGUI(robot2, estop, hard_estop);
             pause;
         end
         
+        %% Move 6DOF 
         function move6DOF(robot2, env, bowlHandle, estop, hard_estop)
-            % Series of movements with E-stop checks
+            % Series of movements
             targets = [
                 0.3, -0.5, 1.01;    %plate #1
                 0, 0, 1.05;         %bowl
@@ -56,27 +61,28 @@ classdef main
                 robot2.moveToTarget(targets(i, :), estop, hard_estop);
             end
 
-            % Mixing 
+            % mixing in the bowl 
             robot2.rotateLink(6, pi, 50, env, estop, hard_estop);
 
-            % Delete previous bowl 
+            % Delete previous bowl ( they will replot in rotateLink)
             if ~isempty(bowlHandle) && isvalid(bowlHandle)
                 delete(bowlHandle);
             end
             % Move into oven (add bowls)
             robot2.rotateLink(5, -2/3 * pi, 50, env, estop, hard_estop);
-            pause(1);
+            pause(2);
             % Move out of oven (add cakes)
             robot2.rotateLink(5, 2/3 * pi, 50, env, estop, hard_estop);
 
-            % Add final cake to the environment
+            % Add final cake to the environment (used for dobot)
             cakePositions = [-0.15, 0, 1];
             env.addCake(0.1, cakePositions);
+
             % move away from cake
             robot2.moveToTarget([0.3, -0.5, 1.01], estop, hard_estop);
         end
         
-        % delete shapes as they are replotted during dobot sim
+        %% delete shapes as they are replotted during dobot sim
         function deleteShapes (shapeHandle3, shapeHandle2, shapeHandle1)
              if ~isempty(shapeHandle3) && isvalid(shapeHandle3)
                 delete(shapeHandle3);
@@ -89,7 +95,7 @@ classdef main
             end
         end
 
-
+        %% GUI for x,y,z and angles 
         function createRobotJoggingGUI(robot, estop, hard_estop)
             % Create a figure for jogging the robot
             jogFig = figure('Name', 'Robot Jogging Controls', 'NumberTitle', 'off', ...
@@ -120,7 +126,7 @@ classdef main
                       'Position', [150, 50, 100, 30], ...
                       'Callback', @(src, event) main.moveRobot(robot, [0, 0, -0.03], estop, hard_estop));
 
-            % joint control
+            % Define buttons for jogging joint angles 
             uicontrol('Style', 'pushbutton', 'String', 'Rotate Link 1', ...
                       'Position', [250, 50, 100, 30], ...
                       'Callback', @(src, event) main.rotateRobot(robot, 1, 0.1));

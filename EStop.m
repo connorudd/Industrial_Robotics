@@ -7,7 +7,7 @@ classdef EStop < handle
     
     methods
         function obj = EStop(parentFig)
-            % Constructor: creates the E-stop button in the specified figure.
+            % Constructor: creates the E-stop button 
             obj.Button = uicontrol('Parent', parentFig, 'Style', 'togglebutton', ...
                 'String', 'STOP', 'FontSize', 14, 'Position', [10, 10, 120, 40], ...
                 'BackgroundColor', 'red', 'ForegroundColor', 'white', ...
@@ -15,7 +15,7 @@ classdef EStop < handle
         end
         
         function toggleStop(obj, ~, ~)
-            % Toggle function to handle STOP, RESUME, and READY TO RESUME states
+            % Toggle function to handle STOP, RESUME, and REACTIVATE states
             if obj.IsStopped && obj.IsReadyToResume
                 % Stop
                 obj.Button.String = 'STOP';
