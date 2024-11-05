@@ -33,7 +33,7 @@ classdef main
             
             %% COMPLETE ANIMATION
             % move 6DOF
-            main.move6DOF(robot2, env, bowlHandle, estop, hard_estop);
+            % main.move6DOF(robot2, env, bowlHandle, estop, hard_estop);
             % delete dobt shapes 
             main.deleteShapes(shapeHandle3, shapeHandle2, shapeHandle1);
             % move dobot (shapes will show) 
