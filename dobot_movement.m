@@ -1,4 +1,4 @@
-% %% Workspace Setup Function
+% %% Workspace Setup Function for initial dobot testing phase
 % clf;
 % clc;
 % % Create and plot robot
@@ -13,7 +13,7 @@
 classdef dobot_movement < handle
     methods (Static) 
         function move_dobot(robot, estop, hard_estop)
-        %% Plot and detect color for green square
+        %% Plot and detect color for green square at pick position
         [f, v, data] = plyread('environment_files/green_square.ply', 'tri');
         vertexColours = [data.vertex.red, data.vertex.green, data.vertex.blue] / 255;
         square_start_position = [-0.4, -0.2, 1];
@@ -24,7 +24,8 @@ classdef dobot_movement < handle
             'FaceVertexCData', vertexColours, ...
             'FaceColor', 'interp', ...
             'EdgeColor', 'none');
-        
+
+        % Demo creation of square at end effector
         % [f, v, data] = plyread('environment_files/green_square.ply', 'tri');
         % vertexColours = [data.vertex.red, data.vertex.green, data.vertex.blue] / 255;
         % square_start_position2 = [0.25, 0, 0];
@@ -36,7 +37,8 @@ classdef dobot_movement < handle
         %     'FaceColor', 'interp', ...
         %     'EdgeColor', 'none');
         % hideObj(square2);
-        
+
+        % Square object at the place position, initally hid until moved to that position
         [f, v, data] = plyread('environment_files/green_square.ply', 'tri');
         vertexColours = [data.vertex.red, data.vertex.green, data.vertex.blue] / 255;
         square_start_position3 = [-0.18, 0, 1.05];
@@ -49,7 +51,7 @@ classdef dobot_movement < handle
             'EdgeColor', 'none');
         dobot_movement.hideObj(square3);
         
-        %% Plot and detect color for blue octagon
+        %% Plot and detect color for blue octagon at pick position
         [f, v, data] = plyread('environment_files/blue_octagon.ply', 'tri');
         vertexColours = [data.vertex.red, data.vertex.green, data.vertex.blue] / 255;
         octagon_start_position = [-0.55, -0.2, 1];
@@ -60,7 +62,8 @@ classdef dobot_movement < handle
             'FaceVertexCData', vertexColours, ...
             'FaceColor', 'interp', ...
             'EdgeColor', 'none');
-        
+
+        % Demo object for dobot testing at end effector
         % [f, v, data] = plyread('environment_files/blue_octagon.ply', 'tri');
         % vertexColours = [data.vertex.red, data.vertex.green, data.vertex.blue] / 255;
         % octagon_start_position2 = [0.1, 0.25, 0];
@@ -72,7 +75,8 @@ classdef dobot_movement < handle
         %     'FaceColor', 'interp', ...
         %     'EdgeColor', 'none');
         % hideObj(octagon2);
-        
+
+        % Octagon object at the place position, initally hid until moved to that position
         [f, v, data] = plyread('environment_files/blue_octagon.ply', 'tri');
         vertexColours = [data.vertex.red, data.vertex.green, data.vertex.blue] / 255;
         octagon_start_position3 = [-0.18, 0.1, 1.05];
@@ -85,7 +89,7 @@ classdef dobot_movement < handle
             'EdgeColor', 'none');
         dobot_movement.hideObj(octagon3);
         
-        %% Plot and detect color for red hexagon
+        %% Plot and detect color for red hexagon at pick position
         [f, v, data] = plyread('environment_files/red_hexagon.ply', 'tri');
         vertexColours = [data.vertex.red, data.vertex.green, data.vertex.blue] / 255;
         hexagon_start_position = [-0.25, -0.2, 1];
@@ -96,7 +100,8 @@ classdef dobot_movement < handle
             'FaceVertexCData', vertexColours, ...
             'FaceColor', 'interp', ...
             'EdgeColor', 'none');
-        
+
+        % Demo obejct for dobot testing at end effector
         % [f, v, data] = plyread('environment_files/red_hexagon.ply', 'tri');
         % vertexColours = [data.vertex.red, data.vertex.green, data.vertex.blue] / 255;
         % hexagon_start_position2 = [0.28, 0.2, 0];
@@ -108,7 +113,8 @@ classdef dobot_movement < handle
         %     'FaceColor', 'interp', ...
         %     'EdgeColor', 'none');
         % hideObj(hexagon2);
-        
+
+        % Hexagon object at the place position, initally hid until moved to that position
         [f, v, data] = plyread('environment_files/red_hexagon.ply', 'tri');
         vertexColours = [data.vertex.red, data.vertex.green, data.vertex.blue] / 255;
         hexagon_start_position3 = [-0.18, 0.05, 1.05];
@@ -121,16 +127,21 @@ classdef dobot_movement < handle
             'EdgeColor', 'none');
         dobot_movement.hideObj(hexagon3);
 
+            % Sets inital posiitons of objects with small z-axis offset considering gripper ply file layout, for more realistic apperance of moving object
             square_position = [-0.4, -0.2, 1.05];
             octagon_position = [-0.55, -0.2, 1.05];
             hexagon_position = [-0.25, -0.2, 1.05];
-        
+
+            % Transitional position between pick and place
             traj_position = [-0.45, 0, 1.1];
 
+            % Place positions of objects
             place_position1 = [-0.18, 0.05, 1.1];
             place_position2 = [-0.18, 0, 1.1];
             place_position3 = [-0.18, 0.1, 1.1];
-            
+
+            % Iteratively moves through each object picking it up, moving through the transition joint position and then placing them. With the inclusion of 
+            % hiding the obejct after picking, placing and moving corresponding to when the robot has visited their position. 
             dobot_movement.moveRobotToPosition(robot, square_position, estop, hard_estop);
             dobot_movement.hideObj(square1);
             dobot_movement.moveRobotToPositionWithSquare(robot, traj_position, estop, hard_estop);
@@ -150,24 +161,29 @@ classdef dobot_movement < handle
             dobot_movement.showObj(hexagon3);
             dobot_movement.moveRobotToPosition(robot, traj_position, estop, hard_estop);
         end
-        %% Function to move the robot from to position
-        function moveRobotToPosition(robot, position, estop, hard_estop)
-            steps = 25;
-            currentQ = robot.model.getpos();
-            targetQ = robot.model.ikcon(transl(position), currentQ);
-            traj = jtraj(currentQ, targetQ, steps);
-            for i = 1:steps
-                % Pause movement if E-stop is active
-                while estop.IsStopped || hard_estop.IsStopped
-                    pause(0.1); % Wait until E-stop is deactivated
-                end
-                robot.model.animate(traj(i, :));
-                pause(0.05);
-            end
-            pause(0.5);
-        end
         
-        %% Function to move the robot from to position
+        %% Function to move the robot from current position to a target position
+        function moveRobotToPosition(robot, position, estop, hard_estop)
+            steps = 25; % Number of steps for the movement trajectory
+            currentQ = robot.model.getpos(); % Get the current joint configuration of the robot
+            targetQ = robot.model.ikcon(transl(position), currentQ); % Calculate the target joint configuration using inverse kinematics
+            traj = jtraj(currentQ, targetQ, steps); % Generate a joint trajectory from current to target configuration
+
+            for i = 1:steps
+                % Pause movement if E-stop or hard E-stop is active
+                while estop.IsStopped || hard_estop.IsStopped
+                    pause(0.1); % Wait until the E-stop is deactivated
+                end
+                robot.model.animate(traj(i, :)); % Animate the robot's movement to the next position in the trajectory
+                pause(0.05); % Short delay between each step for smooth animation
+            end
+            pause(0.5); % Final pause to allow for any remaining movement to complete
+        end
+
+        
+        %% Function to move the robot from to position, based on the first movement function but plotting the new square object iteratively 
+        % with each new joint position determined during the jtraj path, also iteratively hiding and showing the object as it moves through each
+        % end effector position
         function moveRobotToPositionWithSquare(robot, position, estop, hard_estop)
             steps = 25;
             currentQ = robot.model.getpos();
@@ -217,7 +233,9 @@ classdef dobot_movement < handle
             dobot_movement.hideObj(square_updated);
         end
         
-        %% Function to move the robot from to position
+        %% Function to move the robot from to position, based on the first movement function but plotting the new octagon object iteratively 
+        % with each new joint position determined during the jtraj path, also iteratively hiding and showing the object as it moves through each
+        % end effector position
         function moveRobotToPositionWithOctagon(robot, position, estop, hard_estop)
             steps = 25;
             currentQ = robot.model.getpos();
@@ -267,7 +285,9 @@ classdef dobot_movement < handle
             dobot_movement.hideObj(octagon_updated);
         end
         
-        %% Function to move the robot from to position
+        %% Function to move the robot from to position, based on the first movement function but plotting the new hexagon object iteratively 
+        % with each new joint position determined during the jtraj path, also iteratively hiding and showing the object as it moves through each
+        % end effector position
         function moveRobotToPositionWithHexagon(robot, position, estop, hard_estop)
             steps = 25;
             currentQ = robot.model.getpos();
@@ -293,6 +313,7 @@ classdef dobot_movement < handle
                 while estop.IsStopped || hard_estop.IsStopped
                     pause(0.1); % Wait until E-stop is deactivated
                 end
+                % Animate through all joint positions for movement
                 robot.model.animate(traj(i, :));
         
                 current_q = robot.model.getpos();
@@ -316,12 +337,12 @@ classdef dobot_movement < handle
             pause(0.5);
             dobot_movement.hideObj(hexagon_updated);
         end
-        %% Function to hid objects
+        %% Function to hid objects once moved
         function hideObj(obj)
             obj.Visible = 'off';
         end
         
-        %% Function to show objects
+        %% Function to show objects when being moved or in current position
         function showObj(obj)
             obj.Visible = 'on';
         end
