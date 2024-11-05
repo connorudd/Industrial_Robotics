@@ -181,162 +181,194 @@ classdef dobot_movement < handle
         end
 
         
-        %% Function to move the robot from to position, based on the first movement function but plotting the new square object iteratively 
-        % with each new joint position determined during the jtraj path, also iteratively hiding and showing the object as it moves through each
-        % end effector position
-        function moveRobotToPositionWithSquare(robot, position, estop, hard_estop)
-            steps = 25;
-            currentQ = robot.model.getpos();
-            targetQ = robot.model.ikcon(transl(position), currentQ);
-            traj = jtraj(currentQ, targetQ, steps);
-            endEffectorPose = robot.model.fkine(currentQ);
-            initial_object_position = endEffectorPose.t';
-            initial_object_position = initial_object_position + [0, 0, -0.05];
-            
-            [f, v, data] = plyread('environment_files/green_square.ply', 'tri');
-            vertexColours = [data.vertex.red, data.vertex.green, data.vertex.blue] / 255;
-            square_start_position2 = initial_object_position;
-            square_scale_factor2 = 0.002;
-            square_v_scaled2 = v * square_scale_factor2;
-            square_v_transformation2 = square_v_scaled2 + square_start_position2;
-            square_updated = trisurf(f, square_v_transformation2(:, 1), square_v_transformation2(:, 2), square_v_transformation2(:, 3), ...
-                'FaceVertexCData', vertexColours, ...
-                'FaceColor', 'interp', ...
-                'EdgeColor', 'none');
-        
-            for i = 1:steps
-                % Pause movement if E-stop is active
-                while estop.IsStopped|| hard_estop.IsStopped
-                    pause(0.1); % Wait until E-stop is deactivated
-                end
-                robot.model.animate(traj(i, :));
-        
-                current_q = robot.model.getpos();
-                endEffectorPose = robot.model.fkine(current_q);
-                object_position = endEffectorPose.t';
-                object_position = object_position + [0, 0, -0.05];
-                dobot_movement.hideObj(square_updated);
-                [f, v, data] = plyread('environment_files/green_square.ply', 'tri');
-                vertexColours = [data.vertex.red, data.vertex.green, data.vertex.blue] / 255;
-                square_start_position2 = object_position;
-                square_scale_factor2 = 0.002;
-                square_v_scaled2 = v * square_scale_factor2;
-                square_v_transformation2 = square_v_scaled2 + square_start_position2;
-                square_updated = trisurf(f, square_v_transformation2(:, 1), square_v_transformation2(:, 2), square_v_transformation2(:, 3), ...
-                    'FaceVertexCData', vertexColours, ...
-                    'FaceColor', 'interp', ...
-                    'EdgeColor', 'none');
-                pause(0.05);
-                dobot_movement.showObj(square_updated)
-            end
-            pause(0.5);
-            dobot_movement.hideObj(square_updated);
+%% Function to move the robot to a target position, with a square object moving along the path
+% This function is based on the previous movement function but adds iterative plotting of a square object,
+% updating its position with each new end-effector position and hiding/showing it as the robot moves.
+
+function moveRobotToPositionWithSquare(robot, position, estop, hard_estop)
+    steps = 25; % Number of steps for the movement trajectory
+    currentQ = robot.model.getpos(); % Get the robot's current joint configuration
+    targetQ = robot.model.ikcon(transl(position), currentQ); % Calculate target joint configuration using inverse kinematics
+    traj = jtraj(currentQ, targetQ, steps); % Generate joint trajectory for smooth movement
+    endEffectorPose = robot.model.fkine(currentQ); % Calculate initial end-effector pose
+    initial_object_position = endEffectorPose.t'; % Set initial position for the square object
+    initial_object_position = initial_object_position + [0, 0, -0.05]; % Adjust object position slightly below the end-effector
+
+    % Load square object model and set initial transformation parameters
+    [f, v, data] = plyread('environment_files/green_square.ply', 'tri');
+    vertexColours = [data.vertex.red, data.vertex.green, data.vertex.blue] / 255;
+    square_start_position2 = initial_object_position; % Starting position of the square
+    square_scale_factor2 = 0.002; % Scale factor for resizing the square
+    square_v_scaled2 = v * square_scale_factor2; % Apply scaling to square vertices
+    square_v_transformation2 = square_v_scaled2 + square_start_position2; % Transform vertices to initial position
+    % Plot the initial square object with specified colors and properties
+    square_updated = trisurf(f, square_v_transformation2(:, 1), square_v_transformation2(:, 2), square_v_transformation2(:, 3), ...
+        'FaceVertexCData', vertexColours, ...
+        'FaceColor', 'interp', ...
+        'EdgeColor', 'none');
+    
+    for i = 1:steps
+        % Pause movement if E-stop or hard E-stop is active
+        while estop.IsStopped || hard_estop.IsStopped
+            pause(0.1); % Wait until E-stop is deactivated
         end
+        robot.model.animate(traj(i, :)); % Animate robot to the next joint position in the trajectory
+
+        current_q = robot.model.getpos(); % Get current joint configuration
+        endEffectorPose = robot.model.fkine(current_q); % Calculate end-effector pose for the current joint position
+        object_position = endEffectorPose.t'; % Determine new position for the square object
+        object_position = object_position + [0, 0, -0.05]; % Adjust object position relative to end-effector
+
+        % Hide the current square object before repositioning it
+        dobot_movement.hideObj(square_updated);
+
+        % Reload square model to update its position along with the robot
+        [f, v, data] = plyread('environment_files/green_square.ply', 'tri');
+        vertexColours = [data.vertex.red, data.vertex.green, data.vertex.blue] / 255;
+        square_start_position2 = object_position; % Update square's position along the trajectory
+        square_scale_factor2 = 0.002; % Keep scaling factor consistent
+        square_v_scaled2 = v * square_scale_factor2; % Apply scaling to vertices again
+        square_v_transformation2 = square_v_scaled2 + square_start_position2; % Transform to new position
+
+        % Plot the updated square object at the new position
+        square_updated = trisurf(f, square_v_transformation2(:, 1), square_v_transformation2(:, 2), square_v_transformation2(:, 3), ...
+            'FaceVertexCData', vertexColours, ...
+            'FaceColor', 'interp', ...
+            'EdgeColor', 'none');
         
-        %% Function to move the robot from to position, based on the first movement function but plotting the new octagon object iteratively 
-        % with each new joint position determined during the jtraj path, also iteratively hiding and showing the object as it moves through each
-        % end effector position
-        function moveRobotToPositionWithOctagon(robot, position, estop, hard_estop)
-            steps = 25;
-            currentQ = robot.model.getpos();
-            targetQ = robot.model.ikcon(transl(position), currentQ);
-            traj = jtraj(currentQ, targetQ, steps);
-            endEffectorPose = robot.model.fkine(currentQ);
-            initial_object_position = endEffectorPose.t';
-            initial_object_position = initial_object_position + [0, 0, -0.05];
-            
-            [f, v, data] = plyread('environment_files/blue_octagon.ply', 'tri');
-            vertexColours = [data.vertex.red, data.vertex.green, data.vertex.blue] / 255;
-            octagon_start_position2 = initial_object_position;
-            octagon_scale_factor2 = 0.002;
-            octagon_v_scaled2 = v * octagon_scale_factor2;
-            octagon_v_transformation2 = octagon_v_scaled2 + octagon_start_position2;
-            octagon_updated = trisurf(f, octagon_v_transformation2(:, 1), octagon_v_transformation2(:, 2), octagon_v_transformation2(:, 3), ...
-                'FaceVertexCData', vertexColours, ...
-                'FaceColor', 'interp', ...
-                'EdgeColor', 'none');
-        
-            for i = 1:steps
-                % Pause movement if E-stop is active
-                while estop.IsStopped || hard_estop.IsStopped
-                    pause(0.1); % Wait until E-stop is deactivated
-                end
-                robot.model.animate(traj(i, :));
-        
-                current_q = robot.model.getpos();
-                endEffectorPose = robot.model.fkine(current_q);
-                object_position = endEffectorPose.t';
-                object_position = object_position + [0, 0, -0.05];
-                dobot_movement.hideObj(octagon_updated);
-                [f, v, data] = plyread('environment_files/blue_octagon.ply', 'tri');
-                vertexColours = [data.vertex.red, data.vertex.green, data.vertex.blue] / 255;
-                octagon_start_position2 = object_position;
-                octagon_scale_factor2 = 0.002;
-                octagon_v_scaled2 = v * octagon_scale_factor2;
-                octagon_v_transformation2 = octagon_v_scaled2 + octagon_start_position2;
-                octagon_updated = trisurf(f, octagon_v_transformation2(:, 1), octagon_v_transformation2(:, 2), octagon_v_transformation2(:, 3), ...
-                    'FaceVertexCData', vertexColours, ...
-                    'FaceColor', 'interp', ...
-                    'EdgeColor', 'none');
-                pause(0.05);
-                dobot_movement.showObj(octagon_updated)
-            end
-            pause(0.5);
-            dobot_movement.hideObj(octagon_updated);
+        pause(0.05); % Short delay for smooth animation
+        dobot_movement.showObj(square_updated); % Show the object at its new location
+    end
+    pause(0.5); % Final pause to allow movement to complete
+    dobot_movement.hideObj(square_updated); % Hide the square object after movement ends
+end
+
+%% Function to move the robot to a target position, with an octagon object moving along the path
+% This function is based on the previous movement function but adds iterative plotting of an octagon object,
+% updating its position with each new end-effector position and hiding/showing it as the robot moves.
+
+function moveRobotToPositionWithOctagon(robot, position, estop, hard_estop)
+    steps = 25; % Number of steps for the movement trajectory
+    currentQ = robot.model.getpos(); % Get the robot's current joint configuration
+    targetQ = robot.model.ikcon(transl(position), currentQ); % Calculate target joint configuration using inverse kinematics
+    traj = jtraj(currentQ, targetQ, steps); % Generate joint trajectory for smooth movement
+    endEffectorPose = robot.model.fkine(currentQ); % Calculate initial end-effector pose
+    initial_object_position = endEffectorPose.t'; % Set initial position for the octagon object
+    initial_object_position = initial_object_position + [0, 0, -0.05]; % Adjust object position slightly below the end-effector
+
+    % Load octagon object model and set initial transformation parameters
+    [f, v, data] = plyread('environment_files/blue_octagon.ply', 'tri');
+    vertexColours = [data.vertex.red, data.vertex.green, data.vertex.blue] / 255;
+    octagon_start_position2 = initial_object_position; % Starting position of the octagon
+    octagon_scale_factor2 = 0.002; % Scale factor for resizing the octagon
+    octagon_v_scaled2 = v * octagon_scale_factor2; % Apply scaling to octagon vertices
+    octagon_v_transformation2 = octagon_v_scaled2 + octagon_start_position2; % Transform vertices to initial position
+    % Plot the initial octagon object with specified colors and properties
+    octagon_updated = trisurf(f, octagon_v_transformation2(:, 1), octagon_v_transformation2(:, 2), octagon_v_transformation2(:, 3), ...
+        'FaceVertexCData', vertexColours, ...
+        'FaceColor', 'interp', ...
+        'EdgeColor', 'none');
+    
+    for i = 1:steps
+        % Pause movement if E-stop or hard E-stop is active
+        while estop.IsStopped || hard_estop.IsStopped
+            pause(0.1); % Wait until E-stop is deactivated
         end
+        robot.model.animate(traj(i, :)); % Animate robot to the next joint position in the trajectory
+
+        current_q = robot.model.getpos(); % Get current joint configuration
+        endEffectorPose = robot.model.fkine(current_q); % Calculate end-effector pose for the current joint position
+        object_position = endEffectorPose.t'; % Determine new position for the octagon object
+        object_position = object_position + [0, 0, -0.05]; % Adjust object position relative to end-effector
+
+        % Hide the current octagon object before repositioning it
+        dobot_movement.hideObj(octagon_updated);
+
+        % Reload octagon model to update its position along with the robot
+        [f, v, data] = plyread('environment_files/blue_octagon.ply', 'tri');
+        vertexColours = [data.vertex.red, data.vertex.green, data.vertex.blue] / 255;
+        octagon_start_position2 = object_position; % Update octagon's position along the trajectory
+        octagon_scale_factor2 = 0.002; % Keep scaling factor consistent
+        octagon_v_scaled2 = v * octagon_scale_factor2; % Apply scaling to vertices again
+        octagon_v_transformation2 = octagon_v_scaled2 + octagon_start_position2; % Transform to new position
+
+        % Plot the updated octagon object at the new position
+        octagon_updated = trisurf(f, octagon_v_transformation2(:, 1), octagon_v_transformation2(:, 2), octagon_v_transformation2(:, 3), ...
+            'FaceVertexCData', vertexColours, ...
+            'FaceColor', 'interp', ...
+            'EdgeColor', 'none');
         
-        %% Function to move the robot from to position, based on the first movement function but plotting the new hexagon object iteratively 
-        % with each new joint position determined during the jtraj path, also iteratively hiding and showing the object as it moves through each
-        % end effector position
-        function moveRobotToPositionWithHexagon(robot, position, estop, hard_estop)
-            steps = 25;
-            currentQ = robot.model.getpos();
-            targetQ = robot.model.ikcon(transl(position), currentQ);
-            traj = jtraj(currentQ, targetQ, steps);
-            endEffectorPose = robot.model.fkine(currentQ);
-            initial_object_position = endEffectorPose.t';
-            initial_object_position = initial_object_position + [0, 0, -0.05];
-            
-            [f, v, data] = plyread('environment_files/red_hexagon.ply', 'tri');
-            vertexColours = [data.vertex.red, data.vertex.green, data.vertex.blue] / 255;
-            hexagon_start_position2 = initial_object_position;
-            hexagon_scale_factor2 = 0.002;
-            hexagon_v_scaled2 = v * hexagon_scale_factor2;
-            hexagon_v_transformation2 = hexagon_v_scaled2 + hexagon_start_position2;
-            hexagon_updated = trisurf(f, hexagon_v_transformation2(:, 1), hexagon_v_transformation2(:, 2), hexagon_v_transformation2(:, 3), ...
-                'FaceVertexCData', vertexColours, ...
-                'FaceColor', 'interp', ...
-                'EdgeColor', 'none');
+        pause(0.05); % Short delay for smooth animation
+        dobot_movement.showObj(octagon_updated); % Show the object at its new location
+    end
+    pause(0.5); % Final pause to allow movement to complete
+    dobot_movement.hideObj(octagon_updated); % Hide the octagon object after movement ends
+end
+
         
-            for i = 1:steps
-                % Pause movement if E-stop is active
-                while estop.IsStopped || hard_estop.IsStopped
-                    pause(0.1); % Wait until E-stop is deactivated
-                end
-                % Animate through all joint positions for movement
-                robot.model.animate(traj(i, :));
-        
-                current_q = robot.model.getpos();
-                endEffectorPose = robot.model.fkine(current_q);
-                object_position = endEffectorPose.t';
-                object_position = object_position + [0, 0, -0.05];
-                dobot_movement.hideObj(hexagon_updated);
-                [f, v, data] = plyread('environment_files/red_hexagon.ply', 'tri');
-                vertexColours = [data.vertex.red, data.vertex.green, data.vertex.blue] / 255;
-                hexagon_start_position2 = object_position;
-                hexagon_scale_factor2 = 0.002;
-                hexagon_v_scaled2 = v * hexagon_scale_factor2;
-                hexagon_v_transformation2 = hexagon_v_scaled2 + hexagon_start_position2;
-                hexagon_updated = trisurf(f, hexagon_v_transformation2(:, 1), hexagon_v_transformation2(:, 2), hexagon_v_transformation2(:, 3), ...
-                    'FaceVertexCData', vertexColours, ...
-                    'FaceColor', 'interp', ...
-                    'EdgeColor', 'none');
-                pause(0.05);
-                dobot_movement.showObj(hexagon_updated)
-            end
-            pause(0.5);
-            dobot_movement.hideObj(hexagon_updated);
+%% Function to move the robot to a target position with a hexagon object moving along the path
+% This function is based on the previous movement function, adding iterative plotting of a hexagon object,
+% updating its position with each new end-effector position and hiding/showing it as the robot moves.
+
+function moveRobotToPositionWithHexagon(robot, position, estop, hard_estop)
+    steps = 25; % Number of steps for the movement trajectory
+    currentQ = robot.model.getpos(); % Get the robot's current joint configuration
+    targetQ = robot.model.ikcon(transl(position), currentQ); % Calculate target joint configuration using inverse kinematics
+    traj = jtraj(currentQ, targetQ, steps); % Generate joint trajectory for smooth movement
+    endEffectorPose = robot.model.fkine(currentQ); % Calculate initial end-effector pose
+    initial_object_position = endEffectorPose.t'; % Set initial position for the hexagon object
+    initial_object_position = initial_object_position + [0, 0, -0.05]; % Adjust object position slightly below the end-effector
+
+    % Load hexagon object model and set initial transformation parameters
+    [f, v, data] = plyread('environment_files/red_hexagon.ply', 'tri');
+    vertexColours = [data.vertex.red, data.vertex.green, data.vertex.blue] / 255;
+    hexagon_start_position2 = initial_object_position; % Starting position of the hexagon
+    hexagon_scale_factor2 = 0.002; % Scale factor for resizing the hexagon
+    hexagon_v_scaled2 = v * hexagon_scale_factor2; % Apply scaling to hexagon vertices
+    hexagon_v_transformation2 = hexagon_v_scaled2 + hexagon_start_position2; % Transform vertices to initial position
+    % Plot the initial hexagon object with specified colors and properties
+    hexagon_updated = trisurf(f, hexagon_v_transformation2(:, 1), hexagon_v_transformation2(:, 2), hexagon_v_transformation2(:, 3), ...
+        'FaceVertexCData', vertexColours, ...
+        'FaceColor', 'interp', ...
+        'EdgeColor', 'none');
+    
+    for i = 1:steps
+        % Pause movement if E-stop or hard E-stop is active
+        while estop.IsStopped || hard_estop.IsStopped
+            pause(0.1); % Wait until E-stop is deactivated
         end
+        robot.model.animate(traj(i, :)); % Animate robot to the next joint position in the trajectory
+
+        current_q = robot.model.getpos(); % Get current joint configuration
+        endEffectorPose = robot.model.fkine(current_q); % Calculate end-effector pose for the current joint position
+        object_position = endEffectorPose.t'; % Determine new position for the hexagon object
+        object_position = object_position + [0, 0, -0.05]; % Adjust object position relative to end-effector
+
+        % Hide the current hexagon object before repositioning it
+        dobot_movement.hideObj(hexagon_updated);
+
+        % Reload hexagon model to update its position along with the robot
+        [f, v, data] = plyread('environment_files/red_hexagon.ply', 'tri');
+        vertexColours = [data.vertex.red, data.vertex.green, data.vertex.blue] / 255;
+        hexagon_start_position2 = object_position; % Update hexagon's position along the trajectory
+        hexagon_scale_factor2 = 0.002; % Keep scaling factor consistent
+        hexagon_v_scaled2 = v * hexagon_scale_factor2; % Apply scaling to vertices again
+        hexagon_v_transformation2 = hexagon_v_scaled2 + hexagon_start_position2; % Transform to new position
+
+        % Plot the updated hexagon object at the new position
+        hexagon_updated = trisurf(f, hexagon_v_transformation2(:, 1), hexagon_v_transformation2(:, 2), hexagon_v_transformation2(:, 3), ...
+            'FaceVertexCData', vertexColours, ...
+            'FaceColor', 'interp', ...
+            'EdgeColor', 'none');
+        
+        pause(0.05); % Short delay for smooth animation
+        dobot_movement.showObj(hexagon_updated); % Show the object at its new location
+    end
+    pause(0.5); % Final pause to allow movement to complete
+    dobot_movement.hideObj(hexagon_updated); % Hide the hexagon object after movement ends
+end
+
+        
         %% Function to hid objects once moved
         function hideObj(obj)
             obj.Visible = 'off';
